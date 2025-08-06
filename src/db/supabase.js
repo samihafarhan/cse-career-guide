@@ -9,3 +9,5 @@ export const supabaseConfig = {
   key: supabaseAnonKey,
   apiUrl: `${supabaseUrl}/rest/v1`
 }
+
+export default supabase
