@@ -6,12 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Button } from '@/components/ui/button'
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import useFetch from '../hooks/use-fetch'
 import { getAllProjectIdeas, getUserProfile } from '../services/projectideas_services'
 import { getCurrentUser } from '../db/apiAuth'
 import { UrlState } from '@/context'
+import { useNavigate } from 'react-router-dom'
 
 const ProjectIdeas = () => {
   const [currentUser, setCurrentUser] = useState(null)
@@ -21,6 +23,12 @@ const ProjectIdeas = () => {
 
   const { data: projectIdeas, error: projectError, loading: projectLoading, fn: fetchProjectIdeas } = useFetch(getAllProjectIdeas)
   const { user } = UrlState()
+  const navigate = useNavigate()
+
+  // Function to handle "Look for Groups" button click
+  const handleLookForGroups = (projectId, projectTitle) => {
+    navigate(`/groups?projectId=${projectId}&projectTitle=${encodeURIComponent(projectTitle)}`)
+  }
 
   // Fetch current user and their profile
   useEffect(() => {
@@ -137,10 +145,17 @@ const ProjectIdeas = () => {
                       </CardDescription>
                     )}
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <p className="text-gray-700">
                       {idea.description || 'No description provided.'}
                     </p>
+                    <Button 
+                      onClick={() => handleLookForGroups(idea.id, idea.title)}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      Look for Groups
+                    </Button>
                   </CardContent>
                 </Card>
               ))
