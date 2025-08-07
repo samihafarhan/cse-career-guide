@@ -155,8 +155,8 @@ const MyProfile = () => {
                                     <p className="text-lg">{userProfile.organization || 'Not available'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Position</label>
-                                    <p className="text-lg">{userProfile.position || 'Not available'}</p>
+                                    <label className="text-sm font-medium text-gray-500">Role</label>
+                                    <p className="text-lg">{userProfile.role || 'Not available'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-500">Avatar URL</label>
