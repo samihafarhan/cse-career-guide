@@ -1,6 +1,6 @@
 // src/services/newsService.js
-const NEWS_API_BASE_URL = 'https://api.thenewsapi.com/v1';
-const API_TOKEN = 'NRkfPaxHvJk5fQ58CrilFaWqQktFtqSkgVW44DgQ';
+const NEWS_API_BASE_URL = import.meta.env.VITE_NEWS_URL;
+const API_TOKEN = import.meta.env.VITE_NEWS_API_KEY;
 
 class NewsService {
   constructor() {
