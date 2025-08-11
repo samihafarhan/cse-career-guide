@@ -5,12 +5,10 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Re-export getUserProfile from profileService for convenience
 export { getUserProfile }
 
 /**
- * Fetches all project ideas from the beginner_project_ideas table
- * @returns {Promise<Array>} Array of project ideas
+ * @returns {Promise<Array>}
  */
 export const getAllProjectIdeas = async () => {
   const { data, error } = await supabase

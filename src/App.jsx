@@ -1,8 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Landing from './pages/landing.jsx'
 import Auth from './pages/auth.jsx'
+import Dash from './pages/dash.jsx'
 import MyProfile from './pages/myprofile.jsx'
 import ProjectIdeas from './pages/projectideas.jsx'
+import GroupList from './pages/grouplist.jsx'
+import NewsPage from './pages/newspage.jsx'
+import FloatingChatbot from './components/FloatingChatbot.jsx'
 import './App.css'
 
 function App() {
@@ -12,9 +16,16 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/dashboard" element={<Dash />} />
           <Route path="/profile" element={<MyProfile />} />
           <Route path="/projectideas" element={<ProjectIdeas />} />
+          <Route path="/project-ideas" element={<ProjectIdeas />} />
+          <Route path="/groups" element={<GroupList />} />
+          <Route path="/news" element={<NewsPage />} />
         </Routes>
+
+        {/* Floating Chatbot - only visible when authenticated */}
+        <FloatingChatbot />
       </Router>
     </div>
   )
