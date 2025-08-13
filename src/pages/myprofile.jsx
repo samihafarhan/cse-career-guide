@@ -11,54 +11,24 @@ import { Label } from "@/components/ui/label"
 import { BeatLoader } from 'react-spinners'
 import Error from '@/components/error'
 import useFetch from '../hooks/use-fetch'
-import { getCurrentUser } from '../db/apiAuth'
 import { getUserProfile } from '../services/profileService'
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 
 const MyProfile = () => {
-    const [currentUser, setCurrentUser] = useState(null)
-    const [userLoading, setUserLoading] = useState(true)
     const [profileError, setProfileError] = useState(null)
-
-    const { user } = UrlState()
+    const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
 
     // Use the useFetch hook for profile data
     const {data: userProfile, error, loading, fn: fetchProfile} = useFetch(getUserProfile)
 
-    // Fetch current user and then their profile
+    // Fetch user profile data using the user ID from context
     useEffect(() => {
-        const fetchUserAndProfile = async () => {
-            try {
-                setUserLoading(true)
-                setProfileError(null)
-                
-                // Get current user
-                const userData = await getCurrentUser()
-                if (userData) {
-                    setCurrentUser(userData)
-                    // Fetch user profile data using the user ID
-                    await fetchProfile(userData.id)
-                } else {
-                    setProfileError("No user logged in")
-                }
-            } catch (error) {
-                setProfileError(error.message)
-            } finally {
-                setUserLoading(false)
-            }
-        }
-
-        fetchUserAndProfile()
-    }, [])
-
-    // Alternative way using the context user if available
-    useEffect(() => {
-        if (user && !userProfile && !loading) {
+        if (user && user.id) {
             fetchProfile(user.id)
         }
-    }, [user, userProfile, loading])
+    }, [user])
 
-    if (userLoading || loading) {
+    if (authLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <BeatLoader size={15} color="blue" />
@@ -66,15 +36,25 @@ const MyProfile = () => {
         )
     }
 
-    if (profileError && !error) {
+    if (!isAuthenticated) {
+        return null
+    }
+
+    if (loading) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <Error message={profileError || error?.message} />
+            <div className="flex justify-center items-center min-h-screen">
+                <BeatLoader size={15} color="blue" />
             </div>
         )
     }
 
-    const displayUser = currentUser || user
+    if (error) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <Error message={error?.message} />
+            </div>
+        )
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -88,23 +68,23 @@ const MyProfile = () => {
                         <CardDescription>Current user authentication information</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {displayUser ? (
+                        {user ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label className="text-gray-500">User ID</Label>
-                                    <p className="text-sm font-mono bg-gray-100 p-2 rounded">{displayUser.id}</p>
+                                    <p className="text-sm font-mono bg-gray-100 p-2 rounded">{user.id}</p>
                                 </div>
                                 <div>
                                     <Label className="text-gray-500">Email</Label>
-                                    <p className="text-sm">{displayUser.email}</p>
+                                    <p className="text-sm">{user.email}</p>
                                 </div>
                                 <div>
                                     <Label className="text-gray-500">Created At</Label>
-                                    <p className="text-sm">{new Date(displayUser.created_at).toLocaleString()}</p>
+                                    <p className="text-sm">{new Date(user.created_at).toLocaleString()}</p>
                                 </div>
                                 <div>
                                     <Label className="text-gray-500">Last Sign In</Label>
-                                    <p className="text-sm">{displayUser.last_sign_in_at ? new Date(displayUser.last_sign_in_at).toLocaleString() : 'N/A'}</p>
+                                    <p className="text-sm">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'N/A'}</p>
                                 </div>
                             </div>
                         ) : (
@@ -185,7 +165,7 @@ const MyProfile = () => {
                             <div className="text-center py-8">
                                 <p className="text-gray-500 mb-4">No profile data found for this user</p>
                                 <p className="text-sm text-gray-400">
-                                    User ID: {displayUser?.id || 'Unknown'}
+                                    User ID: {user?.id || 'Unknown'}
                                 </p>
                             </div>
                         )}

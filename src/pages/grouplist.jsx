@@ -12,13 +12,12 @@ import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { getGroupsWithProjectDetails } from '../services/grouplist_services'
 import { getUserProfile } from '../services/projectideas_services'
-import { getCurrentUser } from '../db/apiAuth'
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 
 const GroupList = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = UrlState()
+  const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -47,12 +46,9 @@ const GroupList = () => {
       try {
         setUserLoading(true)
         
-        // Get current user from auth
-        const authUser = await getCurrentUser()
-        
-        if (authUser?.id) {
+        if (user?.id) {
           // Fetch user profile data
-          const profile = await getUserProfile(authUser.id)
+          const profile = await getUserProfile(user.id)
           setUserProfile(profile)
         }
       } catch (error) {
@@ -62,7 +58,9 @@ const GroupList = () => {
       }
     }
 
-    fetchUserData()
+    if (user) {
+      fetchUserData()
+    }
   }, [user])
 
   useEffect(() => {
@@ -100,6 +98,18 @@ const GroupList = () => {
 
   const handleBackToProjects = () => {
     navigate('/project-ideas')
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (

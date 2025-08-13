@@ -6,6 +6,8 @@ import bannerImage from '../assets/banner.jpg';
 const Landing = () => {
   const navigate = useNavigate();
 
+  console.log('Landing page is rendering')
+
   const handleGetInClick = () => {
     navigate('/auth');
   };

@@ -15,8 +15,7 @@ import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { createGroup } from '../services/grouplist_services'
 import { getAllProjectIdeas, getUserProfile } from '../services/projectideas_services'
-import { getCurrentUser } from '../db/apiAuth'
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 import * as Yup from 'yup'
 
 import {
@@ -30,7 +29,7 @@ import {
 const CreateGroup = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user } = UrlState()
+  const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
   
   const [formData, setFormData] = useState({
     groupName: '',
@@ -54,16 +53,13 @@ const CreateGroup = () => {
     return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'student'
   }
 
-  // Fetch current user and projects on component mount
+  // Fetch user profile and projects on component mount
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Get current user info
-        const currentUser = await getCurrentUser()
-        
-        if (currentUser?.id) {
+        if (user?.id) {
           // Fetch user profile data
-          const profile = await getUserProfile(currentUser.id)
+          const profile = await getUserProfile(user.id)
           setUserProfile(profile)
         }
 
@@ -79,7 +75,9 @@ const CreateGroup = () => {
       }
     }
 
-    fetchInitialData()
+    if (user) {
+      fetchInitialData()
+    }
   }, [user])
 
   const handleInputChange = (e) => {
@@ -144,6 +142,18 @@ const CreateGroup = () => {
 
   const handleCancel = () => {
     navigate('/groups')
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   // Show loading while checking user permissions

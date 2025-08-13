@@ -9,8 +9,7 @@ import * as Yup from 'yup'
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { submitProjectIdea, getUserProfile } from '../services/projectideas_services'
-import { getCurrentUser } from '../db/apiAuth'
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 
 // Validation schema for project idea submission
 const projectIdeaSchema = Yup.object().shape({
@@ -41,7 +40,7 @@ const SubmitIdea = () => {
   const [userError, setUserError] = useState(null)
   
   const navigate = useNavigate()
-  const { user } = UrlState()
+  const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
 
   // Fetch user profile and auto-fill submitted_by field
   useEffect(() => {
@@ -49,12 +48,9 @@ const SubmitIdea = () => {
       try {
         setUserLoading(true)
         
-        // Get current user from auth
-        const authUser = await getCurrentUser()
-        
-        if (authUser?.id) {
+        if (user?.id) {
           // Fetch user profile data
-          const profile = await getUserProfile(authUser.id)
+          const profile = await getUserProfile(user.id)
           setUserProfile(profile)
           
           // Auto-fill submitted_by with username or email
@@ -63,10 +59,10 @@ const SubmitIdea = () => {
               ...prev,
               submitted_by: profile.username
             }))
-          } else if (authUser?.email) {
+          } else if (user?.email) {
             setFormData(prev => ({
               ...prev,
-              submitted_by: authUser.email
+              submitted_by: user.email
             }))
           }
         }
@@ -77,7 +73,9 @@ const SubmitIdea = () => {
       }
     }
 
-    fetchUserData()
+    if (user) {
+      fetchUserData()
+    }
   }, [user])
 
   // Check if current user is a professor
@@ -139,6 +137,18 @@ const SubmitIdea = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   // Show loading while checking user permissions

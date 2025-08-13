@@ -23,8 +23,23 @@ export async function signup({email, password}) {
 }
 
 export async function getCurrentUser() {
-    const { data:session, error } = await supabase.auth.getSession()
-    if (!session.session) return null
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+            console.error('Error getting session:', error)
+            throw new Error(error.message)
+        }
+        
+        return session?.user || null
+    } catch (error) {
+        console.error('Error in getCurrentUser:', error)
+        return null
+    }
+}
+
+export async function logout() {
+    const { error } = await supabase.auth.signOut()
     if (error) throw new Error(error.message)
-    return session.session?.user
+    return true
 }

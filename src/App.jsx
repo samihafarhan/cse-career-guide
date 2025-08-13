@@ -9,7 +9,7 @@ import GroupList from './pages/grouplist.jsx'
 import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import ChatPage from './pages/chat.jsx'
-import FloatingChatbot from './components/FloatingChatbot.jsx'
+// import FloatingChatbot from './components/FloatingChatbot.jsx'
 // import ChatbotDiagnostic from './components/ChatbotDiagnostic.jsx'
 import './App.css'
 
@@ -22,7 +22,6 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dash />} />
           <Route path="/profile" element={<MyProfile />} />
-          <Route path="/projectideas" element={<ProjectIdeas />} />
           <Route path="/project-ideas" element={<ProjectIdeas />} />
           <Route path="/submit-idea" element={<SubmitIdea />} />
           <Route path="/groups" element={<GroupList />} />
@@ -31,11 +30,9 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
         </Routes>
 
-        {/* Floating Chatbot - only visible when authenticated */}
-        <FloatingChatbot />
+        {/* <FloatingChatbot />
         
-        Temporary Diagnostic Tool
-        <ChatbotDiagnostic />
+        <ChatbotDiagnostic /> */}
       </Router>
     </div>
   )

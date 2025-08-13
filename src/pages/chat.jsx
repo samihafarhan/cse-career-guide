@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UrlState } from '@/context';
+import { useAuthCheck } from '@/context';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import geminiService from '../services/geminiService';
 import sparkleIcon from '../assets/sparkle-icon.svg';
 import sendIcon from '../assets/send-icon.svg';
@@ -11,12 +13,12 @@ const ChatPage = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef(null);
-  const { isAuthenticated } = UrlState();
+  const { isAuthenticated, loading } = useAuthCheck();
 
   const suggestions = [
     "What can I ask you to do?",
-    "Which one of my projects is performing the best?",
-    "What projects should I be concerned about right now?"
+    "What are the current trends for a career in CSE?",
+    "What projects or papers should I be concerned about right now?"
   ];
 
   const scrollToBottom = () => {
@@ -100,16 +102,25 @@ const ChatPage = () => {
     }
   };
 
+  const handleTextareaChange = (e) => {
+    setInputMessage(e.target.value);
+    // Auto-resize textarea
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+  };
+
+  // Don't render if user is not authenticated or still loading
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
   // Don't render if user is not authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-50 to-indigo-100">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">Authentication Required</h2>
-          <p className="text-gray-600">Please log in to access the AI chat.</p>
-        </div>
-      </div>
-    );
+    return null
   }
 
   return (
@@ -131,25 +142,29 @@ const ChatPage = () => {
             </div>
             
             {/* Main heading */}
-            <h1 className="text-2xl font-normal text-[#160211] text-center mb-12 font-['Manrope']">
-              Ask our AI anything
+            <h1 className="text-4xl font-bold text-[#160211] text-center mb-12">
+              Your humble assistant
+            </h1>
+            <h1 className="text-2xl font-bold text-[#160211] text-center mb-12">
+              Powered by Gemini
             </h1>
             
             {/* Suggestions section */}
             <div className="w-full max-w-4xl mb-16">
-              <p className="text-sm font-bold text-[#56637e] mb-4 font-['Manrope'] ml-2">
-                Suggestions on what to ask Our AI
+              <p className="text-lg font-semibold text-[#56637e] mb-6 text-center">
+                Ask Away
               </p>
               
-              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+              <div className="flex flex-wrap gap-4 justify-center">
                 {suggestions.map((suggestion, index) => (
-                  <button
+                  <Button
                     key={index}
+                    variant="outline"
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className="bg-white/50 backdrop-blur-sm border border-white text-[#160211] px-4 py-3 rounded-lg text-sm font-normal transition-all hover:bg-white/70 hover:shadow-md font-['DM_Sans'] max-w-[274px] text-left"
+                    className="bg-white/70 backdrop-blur-sm border border-white/80 text-[#160211] hover:bg-white/90 hover:shadow-lg transition-all max-w-[300px] h-auto py-3 px-6 text-left whitespace-normal"
                   >
                     {suggestion}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -163,7 +178,7 @@ const ChatPage = () => {
               {/* Chat header when in conversation */}
               <div className="text-center mb-8">
                 <img src={sparkleIcon} alt="AI Sparkle" className="w-6 h-6 mx-auto mb-4" />
-                <h2 className="text-xl font-normal text-[#160211] font-['Manrope']">
+                <h2 className="text-2xl font-semibold text-[#160211]">
                   AI Assistant
                 </h2>
               </div>
@@ -183,7 +198,7 @@ const ChatPage = () => {
                         : 'bg-white/80 backdrop-blur-sm text-[#160211] border border-white/50 rounded-bl-md'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap font-['Manrope'] text-sm leading-relaxed">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
                       {message.text}
                     </p>
                     <p className={`text-xs mt-2 ${
@@ -205,7 +220,7 @@ const ChatPage = () => {
                         <div className="w-2 h-2 bg-[#56637e] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                         <div className="w-2 h-2 bg-[#56637e] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
-                      <span className="text-xs text-[#56637e] font-['Manrope']">AI is thinking...</span>
+                      <span className="text-xs text-[#56637e]">AI is thinking...</span>
                     </div>
                   </div>
                 </div>
@@ -219,24 +234,26 @@ const ChatPage = () => {
         {/* Input area - always at bottom */}
         <div className="p-6">
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm border border-[rgba(22,2,17,0.3)] rounded-lg p-3 flex items-center justify-between">
-              <input
-                type="text"
+            <div className="bg-white/90 backdrop-blur-sm border border-[rgba(22,2,17,0.2)] rounded-lg p-4 flex items-end gap-3 shadow-lg">
+              <Textarea
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
+                onChange={handleTextareaChange}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about your projects"
-                className="flex-1 bg-transparent text-[#56637e] placeholder-[#56637e] text-sm font-['Manrope'] focus:outline-none"
+                placeholder="Ask me anything..."
+                className="flex-1 bg-transparent text-[#160211] placeholder-[#56637e] resize-none min-h-[60px] max-h-[150px] border-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 disabled={isLoading}
+                rows={1}
               />
-              <button
+              <Button
                 onClick={() => handleSendMessage()}
                 disabled={!inputMessage.trim() || isLoading}
-                className="ml-3 p-2 rounded-lg transition-all hover:bg-gray-100/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="ghost"
+                size="icon"
+                className="flex-shrink-0 hover:bg-gray-100/50 disabled:opacity-50 disabled:cursor-not-allowed p-2"
                 aria-label="Send message"
               >
                 <img src={sendIcon} alt="Send" className="w-6 h-6" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

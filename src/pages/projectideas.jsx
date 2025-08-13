@@ -11,20 +11,18 @@ import { BeatLoader, BarLoader } from 'react-spinners'
 import Error from '../components/error'
 import useFetch from '../hooks/use-fetch'
 import { getAllProjectIdeas, getUserProfile } from '../services/projectideas_services'
-import { getCurrentUser } from '../db/apiAuth'
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 const ProjectIdeas = () => {
   const [searchParams] = useSearchParams()
-  const [currentUser, setCurrentUser] = useState(null)
   const [userProfile, setUserProfile] = useState(null)
   const [userLoading, setUserLoading] = useState(true)
   const [userError, setUserError] = useState(null)
   const [showSuccess, setShowSuccess] = useState(false)
 
   const { data: projectIdeas, error: projectError, loading: projectLoading, fn: fetchProjectIdeas } = useFetch(getAllProjectIdeas)
-  const { user } = UrlState()
+  const { user, isAuthenticated, loading } = useAuthCheck()
   const navigate = useNavigate()
   const isIdeaSubmitted = searchParams.get('submitted')
 
@@ -64,19 +62,15 @@ const ProjectIdeas = () => {
     navigate('/submit-idea')
   }
 
-  // Fetch current user and their profile
+  // Fetch user profile data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setUserLoading(true)
         
-        // Get current user from auth
-        const authUser = await getCurrentUser()
-        setCurrentUser(authUser)
-        
-        if (authUser?.id) {
+        if (user?.id) {
           // Fetch user profile data
-          const profile = await getUserProfile(authUser.id)
+          const profile = await getUserProfile(user.id)
           setUserProfile(profile)
         }
       } catch (error) {
@@ -86,13 +80,27 @@ const ProjectIdeas = () => {
       }
     }
 
-    fetchUserData()
+    if (user) {
+      fetchUserData()
+    }
   }, [user])
 
   // Fetch project ideas
   useEffect(() => {
     fetchProjectIdeas()
   }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">

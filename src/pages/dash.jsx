@@ -8,18 +8,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { UrlState } from '@/context'
+import { useAuthCheck } from '@/context'
 
 const Dash = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated } = UrlState()
+  const { user, isAuthenticated, loading } = useAuthCheck()
 
   const navigateToPage = (path) => {
     navigate(path)
   }
 
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated (redirect will happen)
   if (!isAuthenticated) {
-    navigate('/auth')
     return null
   }
 
@@ -82,19 +94,15 @@ const Dash = () => {
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2 lg:col-span-1">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/chat')}>
             <CardHeader>
               <CardTitle className="text-xl text-indigo-600">AI Assistant</CardTitle>
               <CardDescription>Get help anytime</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Use our AI chatbot (bottom right corner) for instant assistance with your CS career questions.
+                Use our AI chatbot for instant assistance with your CS career questions.
               </p>
-              <div className="flex items-center text-xs text-gray-500">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                AI Assistant is always available
-              </div>
             </CardContent>
           </Card>
         </div>
