@@ -20,7 +20,17 @@ class GeminiService {
       return response.text();
     } catch (error) {
       console.error('Error generating response:', error);
-      throw error;
+      
+      // Provide more specific error messages
+      if (error.status === 503) {
+        throw new Error('AI service is temporarily overloaded. Please try again in a few moments.');
+      } else if (error.status === 429) {
+        throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+      } else if (error.status === 401) {
+        throw new Error('API key is invalid or expired.');
+      } else {
+        throw new Error('AI service is currently unavailable. Please try again later.');
+      }
     }
   }
 

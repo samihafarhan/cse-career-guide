@@ -71,9 +71,10 @@ const FloatingChatbot = () => {
       ]);
 
     } catch (error) {
+      console.error('Chatbot error:', error);
       const errorMessage = {
         id: Date.now() + 1,
-        text: 'Sorry, I encountered an error. Please try again.',
+        text: error.message || 'Sorry, I encountered an error. Please try again.',
         sender: 'ai',
         timestamp: new Date(),
         isError: true
