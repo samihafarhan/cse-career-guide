@@ -244,22 +244,6 @@ const GroupList = () => {
           )}
         </div>
       )}
-
-      {/* Debug Information */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card className="mt-8 bg-gray-50">
-          <CardHeader>
-            <CardTitle className="text-sm">Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs space-y-2">
-            <div><strong>Project ID:</strong> {projectId || 'None'}</div>
-            <div><strong>Project Title:</strong> {projectTitle || 'None'}</div>
-            <div><strong>Groups Found:</strong> {groups?.length || 0}</div>
-            <div><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</div>
-            <div><strong>Error:</strong> {error ? error.message : 'None'}</div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

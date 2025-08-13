@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card"
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { createGroup } from '../services/grouplist_services'
@@ -217,8 +219,9 @@ const CreateGroup = () => {
               <h3 className="text-lg font-semibold text-gray-800">Group Details</h3>
               
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Group Name *</label>
+                <Label htmlFor="groupName" className="text-gray-700">Group Name *</Label>
                 <Input
+                  id="groupName"
                   name="groupName"
                   type="text"
                   placeholder="Enter a name for your group"
@@ -230,7 +233,7 @@ const CreateGroup = () => {
               </div>
               
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Project *</label>
+                <Label htmlFor="projectSelect" className="text-gray-700">Project *</Label>
                 {projectsLoading ? (
                   <div className="flex items-center py-2">
                     <BeatLoader size={8} color="gray" />
@@ -238,7 +241,7 @@ const CreateGroup = () => {
                   </div>
                 ) : (
                   <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({...prev, projectId: value}))}>
-                    <SelectTrigger className={`w-full ${errors.projectId ? 'border-red-500' : ''}`}>
+                    <SelectTrigger id="projectSelect" className={`w-full ${errors.projectId ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select a project" />
                     </SelectTrigger>
                     <SelectContent>
@@ -259,14 +262,15 @@ const CreateGroup = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Group Introduction *</label>
-                <textarea
+                <Label htmlFor="introduction" className="text-gray-700">Group Introduction *</Label>
+                <Textarea
+                  id="introduction"
                   name="introduction"
                   placeholder="Describe your group, goals, and what you're looking for in team members..."
                   value={formData.introduction}
                   onChange={handleInputChange}
                   rows={4}
-                  className={`w-full px-3 py-2 text-sm border rounded-md resize-none ${errors.introduction ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  className={errors.introduction ? 'border-red-500' : ''}
                 />
                 {errors.introduction && <Error message={errors.introduction} />}
               </div>

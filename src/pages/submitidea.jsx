@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import * as Yup from 'yup'
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
@@ -192,9 +194,9 @@ const SubmitIdea = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Project Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label htmlFor="title" className="block text-gray-700 mb-2">
                 Project Title *
-              </label>
+              </Label>
               <Input
                 id="title"
                 name="title"
@@ -211,19 +213,17 @@ const SubmitIdea = () => {
 
             {/* Project Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label htmlFor="description" className="block text-gray-700 mb-2">
                 Project Description *
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Describe the project, its objectives, technologies to be used, and learning outcomes..."
                 rows={6}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.description ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={errors.description ? 'border-red-500' : ''}
               />
               {errors.description && (
                 <p className="text-red-500 text-sm mt-1">{errors.description}</p>
@@ -232,9 +232,9 @@ const SubmitIdea = () => {
 
             {/* Submitted By */}
             <div>
-              <label htmlFor="submitted_by" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label htmlFor="submitted_by" className="block text-gray-700 mb-2">
                 Submitted By *
-              </label>
+              </Label>
               <Input
                 id="submitted_by"
                 name="submitted_by"
