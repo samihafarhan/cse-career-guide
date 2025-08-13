@@ -145,7 +145,7 @@ const ChatPage = () => {
             <h1 className="text-4xl font-bold text-[#160211] text-center mb-12">
               Your humble assistant
             </h1>
-            <h1 className="text-2xl font-bold text-[#160211] text-center mb-12">
+            <h1 className="text-xl font-bold text-[#160211] text-center mb-12">
               Powered by Gemini
             </h1>
             

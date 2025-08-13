@@ -33,29 +33,6 @@ class GeminiService {
       }
     }
   }
-
-  async streamResponse(message, chatHistory = [], onChunk) {
-    try {
-      const chat = this.model.startChat({
-        history: chatHistory,
-        generationConfig: {
-          maxOutputTokens: 1024,
-        },
-      });
-
-      const result = await chat.sendMessageStream(message);
-      
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        if (chunkText && onChunk) {
-          onChunk(chunkText);
-        }
-      }
-    } catch (error) {
-      console.error('Error streaming response:', error);
-      throw error;
-    }
-  }
 }
 
 export default new GeminiService();

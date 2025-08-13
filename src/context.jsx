@@ -16,11 +16,9 @@ const UrlProvider = ({children}) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state changed:', event, session?.user?.id)
-                
                 if (event === 'INITIAL_SESSION') {
                     setIsSessionLoaded(true)
                 }
-                
                 if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                     fetchuser()
                 } else if (event === 'SIGNED_OUT') {
@@ -28,13 +26,10 @@ const UrlProvider = ({children}) => {
                 }
             }
         )
-
         // Initial user fetch
         fetchuser()
-
         return () => subscription.unsubscribe()
     }, [])
-    
     return (
         <urlcontext.Provider value={{user, fetchuser, loading, isAuthenticated, isSessionLoaded}}>
             {children}

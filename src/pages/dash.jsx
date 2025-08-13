@@ -106,12 +106,6 @@ const Dash = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-4">
-            Don't forget to check out the AI chatbot in the bottom-right corner for instant help!
-          </p>
-        </div>
       </div>
     </div>
   )

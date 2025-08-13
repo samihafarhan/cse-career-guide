@@ -9,8 +9,6 @@ import GroupList from './pages/grouplist.jsx'
 import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import ChatPage from './pages/chat.jsx'
-// import FloatingChatbot from './components/FloatingChatbot.jsx'
-// import ChatbotDiagnostic from './components/ChatbotDiagnostic.jsx'
 import './App.css'
 
 function App() {
@@ -30,9 +28,6 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
         </Routes>
 
-        {/* <FloatingChatbot />
-        
-        <ChatbotDiagnostic /> */}
       </Router>
     </div>
   )
