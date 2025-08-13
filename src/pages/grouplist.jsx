@@ -11,16 +11,75 @@ import { Button } from '@/components/ui/button'
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { getGroupsWithProjectDetails } from '../services/grouplist_services'
+import { getUserProfile } from '../services/projectideas_services'
+import { getCurrentUser } from '../db/apiAuth'
+import { UrlState } from '@/context'
 
 const GroupList = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user } = UrlState()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [userProfile, setUserProfile] = useState(null)
+  const [userLoading, setUserLoading] = useState(true)
+  const [userError, setUserError] = useState(null)
   
   const projectId = searchParams.get('projectId')
   const projectTitle = searchParams.get('projectTitle')
+  const isGroupCreated = searchParams.get('created')
+
+  // Check if current user is a student
+  const isStudent = () => {
+    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'student'
+  }
+
+  // Check if current user is a professor
+  const isProfessor = () => {
+    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'professor'
+  }
+
+  // Fetch user profile
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setUserLoading(true)
+        
+        // Get current user from auth
+        const authUser = await getCurrentUser()
+        
+        if (authUser?.id) {
+          // Fetch user profile data
+          const profile = await getUserProfile(authUser.id)
+          setUserProfile(profile)
+        }
+      } catch (error) {
+        setUserError(error.message)
+      } finally {
+        setUserLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [user])
+
+  useEffect(() => {
+    // Show success message if group was just created
+    if (isGroupCreated === 'true') {
+      setShowSuccess(true)
+      // Remove the created parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.delete('created')
+      navigate(`/groups?${newSearchParams.toString()}`, { replace: true })
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 5000)
+    }
+  }, [isGroupCreated, navigate, searchParams])
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -61,10 +120,49 @@ const GroupList = () => {
             </p>
           )}
         </div>
-        <Button onClick={handleBackToProjects} variant="outline">
-          Back to Projects
-        </Button>
+        <div className="flex gap-3">
+          {!userLoading && isStudent() && (
+            <Button 
+              onClick={() => navigate(`/create-group${projectId ? `?projectId=${projectId}&projectTitle=${encodeURIComponent(projectTitle || '')}` : ''}`)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Create New Group
+            </Button>
+          )}
+          <Button onClick={handleBackToProjects} variant="outline">
+            Back to Projects
+          </Button>
+        </div>
       </div>
+
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <div className="text-green-600">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-800">
+                Group created successfully! 
+              </p>
+              <p className="text-sm text-green-600">
+                Your new group is now visible to other students.
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowSuccess(false)}
+              className="ml-auto text-green-500 hover:text-green-700"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="flex items-center justify-center py-8">
@@ -113,11 +211,13 @@ const GroupList = () => {
                       </div>
                     )}
                     
-                    <div className="pt-3">
-                      <Button className="w-full" size="sm">
-                        Join Group
-                      </Button>
-                    </div>
+                    {!userLoading && isStudent() && (
+                      <div className="pt-3">
+                        <Button className="w-full" size="sm">
+                          Join Group
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -143,22 +243,6 @@ const GroupList = () => {
             </Card>
           )}
         </div>
-      )}
-
-      {/* Debug Information */}
-      {process.env.NODE_ENV === 'development' && (
-        <Card className="mt-8 bg-gray-50">
-          <CardHeader>
-            <CardTitle className="text-sm">Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs space-y-2">
-            <div><strong>Project ID:</strong> {projectId || 'None'}</div>
-            <div><strong>Project Title:</strong> {projectTitle || 'None'}</div>
-            <div><strong>Groups Found:</strong> {groups?.length || 0}</div>
-            <div><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</div>
-            <div><strong>Error:</strong> {error ? error.message : 'None'}</div>
-          </CardContent>
-        </Card>
       )}
     </div>
   )
