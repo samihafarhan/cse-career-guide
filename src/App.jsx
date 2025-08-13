@@ -4,7 +4,9 @@ import Auth from './pages/auth.jsx'
 import Dash from './pages/dash.jsx'
 import MyProfile from './pages/myprofile.jsx'
 import ProjectIdeas from './pages/projectideas.jsx'
+import SubmitIdea from './pages/submitidea.jsx'
 import GroupList from './pages/grouplist.jsx'
+import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import ChatPage from './pages/chat.jsx'
 import FloatingChatbot from './components/FloatingChatbot.jsx'
@@ -22,7 +24,9 @@ function App() {
           <Route path="/profile" element={<MyProfile />} />
           <Route path="/projectideas" element={<ProjectIdeas />} />
           <Route path="/project-ideas" element={<ProjectIdeas />} />
+          <Route path="/submit-idea" element={<SubmitIdea />} />
           <Route path="/groups" element={<GroupList />} />
+          <Route path="/create-group" element={<CreateGroup />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/chat" element={<ChatPage />} />
         </Routes>
