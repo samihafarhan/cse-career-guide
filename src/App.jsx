@@ -10,6 +10,9 @@ import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import Header from './components/Header.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
+import CareerPath from "./pages/careerpath.jsx"
+import CareerResult from "./pages/careerresult.jsx"
+import SeePath from "./pages/seepath.jsx"
 import './App.css'
 
 function AppContent() {
@@ -30,6 +33,10 @@ function AppContent() {
         <Route path="/groups" element={<GroupList />} />
         <Route path="/create-group" element={<CreateGroup />} />
         <Route path="/news" element={<NewsPage />} />
+        <Route path="/career-path" element={<CareerPath />} />
+        <Route path="/careerpath" element={<CareerPath />} />
+        <Route path="/careerresult" element={<CareerResult />} />
+        <Route path="/seepath" element={<SeePath />} /> {/* Add this line */}
       </Routes>
     </>
   );
