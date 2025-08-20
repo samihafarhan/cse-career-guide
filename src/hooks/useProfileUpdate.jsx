@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 /**
  * Custom hook for managing profile field updates
- * @param {Function} updateFunction - The update function to call
- * @param {Function} onSuccess - Callback on successful update
+ * @param {Function} updateFunction 
+ * @param {Function} onSuccess 
  */
 export const useProfileUpdate = (updateFunction, onSuccess = () => {}) => {
   const [newValue, setNewValue] = useState('')

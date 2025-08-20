@@ -1,4 +1,3 @@
-// src/components/ChatSheet.jsx
 import React from "react";
 import {
   Sheet,
@@ -20,7 +19,6 @@ export default function ChatSheet() {
         </Button>
       </SheetTrigger>
 
-      {/* p-0 removes padding so PersistentChat can use full width/height */}
       <SheetContent
         side="right"
         className="p-0 flex flex-col overflow-hidden w-full max-w-md"

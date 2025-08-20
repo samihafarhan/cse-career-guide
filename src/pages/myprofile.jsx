@@ -39,7 +39,6 @@ import {
 import { useAuthCheck } from '@/context'
 
 const MyProfile = () => {
-    // Username state with availability checking
     const [isCheckingUsername, setIsCheckingUsername] = useState(false)
     const [usernameAvailable, setUsernameAvailable] = useState(null)
     
@@ -201,12 +200,12 @@ const MyProfile = () => {
                                                         )}
                                                         {!isCheckingUsername && usernameAvailable === true && usernameUpdate.newValue.trim() && (
                                                             <div className="text-sm text-green-600 mt-1">
-                                                                ✓ Username available
+                                                                Username available
                                                             </div>
                                                         )}
                                                         {!isCheckingUsername && usernameAvailable === false && usernameUpdate.newValue.trim() && (
                                                             <div className="text-sm text-red-600 mt-1">
-                                                                ✗ Username already taken
+                                                                Username already taken
                                                             </div>
                                                         )}
                                                     </div>

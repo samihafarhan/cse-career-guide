@@ -27,9 +27,9 @@ export const getUserProfile = async (userId) => {
 
 /**
  * Generic function to update any profile field
- * @param {string} userId - The user's ID
- * @param {Object} updates - Object with field-value pairs to update
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {Object} updates
+ * @returns {Promise<Object>}
  */
 export const updateProfileField = async (userId, updates) => {
   const { data, error } = await supabase
@@ -46,9 +46,9 @@ export const updateProfileField = async (userId, updates) => {
 
 /**
  * Update user's username in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} username - The new username
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {string} username 
+ * @returns {Promise<Object>} 
  */
 export const updateUsername = async (userId, username) => {
   return updateProfileField(userId, { username })
@@ -56,9 +56,9 @@ export const updateUsername = async (userId, username) => {
 
 /**
  * Check if a username already exists in the database
- * @param {string} username - The username to check
- * @param {string} currentUserId - The current user's ID (to exclude from check)
- * @returns {Promise<boolean>} True if username exists, false otherwise
+ * @param {string} username 
+ * @param {string} currentUserId 
+ * @returns {Promise<boolean>} 
  */
 export const checkUsernameExists = async (username, currentUserId = null) => {
   let query = supabase
@@ -67,7 +67,7 @@ export const checkUsernameExists = async (username, currentUserId = null) => {
     .eq('username', username)
     .limit(1)
 
-  // Exclude current user from the check
+ 
   if (currentUserId) {
     query = query.neq('id', currentUserId)
   }
@@ -81,9 +81,9 @@ export const checkUsernameExists = async (username, currentUserId = null) => {
 
 /**
  * Update user's organization in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} organization - The new organization
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {string} organization 
+ * @returns {Promise<Object>}
  */
 export const updateOrganization = async (userId, organization) => {
   return updateProfileField(userId, { organization })
@@ -91,9 +91,9 @@ export const updateOrganization = async (userId, organization) => {
 
 /**
  * Update user's bio in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} bio - The new bio
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {string} bio 
+ * @returns {Promise<Object>} 
  */
 export const updateBio = async (userId, bio) => {
   return updateProfileField(userId, { bio })
@@ -101,9 +101,9 @@ export const updateBio = async (userId, bio) => {
 
 /**
  * Update user's graduation year in the profiles table
- * @param {string} userId - The user's ID
- * @param {number} gradYear - The new graduation year
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {number} gradYear 
+ * @returns {Promise<Object>} 
  */
 export const updateGradYear = async (userId, gradYear) => {
   return updateProfileField(userId, { grad_year: gradYear })
@@ -111,9 +111,9 @@ export const updateGradYear = async (userId, gradYear) => {
 
 /**
  * Update user's skills in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} skills - The new skills
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {string} skills 
+ * @returns {Promise<Object>} 
  */
 export const updateSkills = async (userId, skills) => {
   return updateProfileField(userId, { skills })
@@ -121,9 +121,9 @@ export const updateSkills = async (userId, skills) => {
 
 /**
  * Update user's role in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} role - The new role
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId
+ * @param {string} role 
+ * @returns {Promise<Object>} 
  */
 export const updateRole = async (userId, role) => {
   return updateProfileField(userId, { role })
@@ -131,9 +131,9 @@ export const updateRole = async (userId, role) => {
 
 /**
  * Update user's avatar URL in the profiles table
- * @param {string} userId - The user's ID
- * @param {string} avatarUrl - The new avatar URL
- * @returns {Promise<Object>} Updated profile data
+ * @param {string} userId 
+ * @param {string} avatarUrl 
+ * @returns {Promise<Object>} 
  */
 export const updateAvatarUrl = async (userId, avatarUrl) => {
   return updateProfileField(userId, { avatar_url: avatarUrl })

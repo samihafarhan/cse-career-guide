@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuthCheck } from '@/context';
 import ChatSheet from '@/components/chatsheet';
-import { LogOut, User, MessageCircle } from 'lucide-react';
+import { LogOut, User, } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();

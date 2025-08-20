@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 /**
  * Custom hook for managing form state and validation
- * @param {Object} initialState - Initial form data
- * @param {Function} validationSchema - Yup validation schema (optional)
+ * @param {Object} initialState 
+ * @param {Function} validationSchema 
  */
 export const useForm = (initialState = {}, validationSchema = null) => {
   const [formData, setFormData] = useState(initialState)

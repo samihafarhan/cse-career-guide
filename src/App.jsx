@@ -10,6 +10,8 @@ import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import InterviewQuestions from './pages/interviewquestions.jsx'
 import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
+import Feedback from './pages/feedback.jsx'
+import PostFeedback from './pages/postfeedback.jsx'
 import Header from './components/Header.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
 import { Toaster } from '@/components/ui/sonner'
@@ -38,10 +40,11 @@ function AppContent() {
         <Route path="/news" element={<NewsPage />} />
         <Route path="/interview-questions" element={<InterviewQuestions />} />
         <Route path="/submit-interview-question" element={<SubmitInterviewQuestion />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/post-feedback" element={<PostFeedback />} />
         <Route path="/career-path" element={<CareerPath />} />
-        <Route path="/careerpath" element={<CareerPath />} />
         <Route path="/careerresult" element={<CareerResult />} />
-        <Route path="/seepath" element={<SeePath />} /> {/* Add this line */}
+        <Route path="/seepath" element={<SeePath />} />
       </Routes>
     </>
   );
