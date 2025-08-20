@@ -5,10 +5,13 @@ import { useState, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { getCareerPath } from "@/services/careerPathservice"
+import { useAuthCheck } from '@/context'
 
 export default function CareerResult() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user, isAuthenticated, loading } = useAuthCheck()
+  
   const [careerData, setCareerData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -36,8 +39,25 @@ export default function CareerResult() {
       }
     }
 
-    fetchCareerData()
-  }, [searchParams])
+    if (isAuthenticated) {
+      fetchCareerData()
+    }
+  }, [searchParams, isAuthenticated])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   if (isLoading) {
     return (

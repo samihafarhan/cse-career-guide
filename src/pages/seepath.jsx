@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loader2, ArrowLeft } from "lucide-react"
 import GeminiService from "../services/geminiService"
+import { useAuthCheck } from '@/context'
 
 export default function SeePath() {
+  const { user, isAuthenticated, loading } = useAuthCheck()
   const [flowchart, setFlowchart] = useState("")
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -17,15 +19,15 @@ export default function SeePath() {
   const careerResult = searchParams.get("result")
 
   useEffect(() => {
-    if (careerResult) {
+    if (careerResult && isAuthenticated) {
       generateFlowchart()
     }
     // eslint-disable-next-line
-  }, [careerResult])
+  }, [careerResult, isAuthenticated])
 
   const generateFlowchart = async () => {
     try {
-      setLoading(true)
+      setIsLoading(true)
       setError("")
 
       const prompt = `Give me a detailed flow chart about ${careerResult}`
@@ -36,12 +38,27 @@ export default function SeePath() {
       console.error("Error generating flowchart:", err)
       setError("Failed to generate career path flowchart. Please try again.")
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   const handleBack = () => {
     navigate(-1)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
