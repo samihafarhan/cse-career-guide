@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
+import ReactMarkdown from "react-markdown"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loader2, ArrowLeft } from "lucide-react"
@@ -90,8 +91,30 @@ export default function SeePath() {
             )}
 
             {flowchart && !loading && (
-              <div className="prose max-w-none">
-                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">{flowchart}</div>
+              <div className="prose prose-lg max-w-none">
+                <div className="text-gray-800 leading-relaxed">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-xl font-semibold mb-3 text-gray-800">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-lg font-medium mb-2 text-gray-700">{children}</h3>,
+                      p: ({ children }) => <p className="mb-3 text-gray-700 leading-relaxed">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1">{children}</ol>,
+                      li: ({ children }) => <li className="text-gray-700">{children}</li>,
+                      strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                      em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+                      code: ({ children }) => (
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">{children}</code>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>
+                      ),
+                    }}
+                  >
+                    {flowchart}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
           </CardContent>
