@@ -93,18 +93,6 @@ const Dash = () => {
               </p>
             </CardContent>
           </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/chat')}>
-            <CardHeader>
-              <CardTitle className="text-xl text-indigo-600">AI Assistant</CardTitle>
-              <CardDescription>Get help anytime</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
-                Use our AI chatbot for instant assistance with your CS career questions.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

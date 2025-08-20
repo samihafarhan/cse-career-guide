@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Landing from './pages/landing.jsx'
 import Auth from './pages/auth.jsx'
 import Dash from './pages/dash.jsx'
@@ -8,27 +8,41 @@ import SubmitIdea from './pages/submitidea.jsx'
 import GroupList from './pages/grouplist.jsx'
 import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
-import ChatPage from './pages/chat.jsx'
+import Header from './components/Header.jsx'
+import { ChatProvider } from './context/ChatContext.jsx'
 import './App.css'
+
+function AppContent() {
+  const location = useLocation();
+  const hideHeaderRoutes = ['/', '/auth'];
+  const showHeader = !hideHeaderRoutes.includes(location.pathname);
+
+  return (
+    <>
+      {showHeader && <Header />}
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<Dash />} />
+        <Route path="/profile" element={<MyProfile />} />
+        <Route path="/project-ideas" element={<ProjectIdeas />} />
+        <Route path="/submit-idea" element={<SubmitIdea />} />
+        <Route path="/groups" element={<GroupList />} />
+        <Route path="/create-group" element={<CreateGroup />} />
+        <Route path="/news" element={<NewsPage />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
     <div className="App">
-      <Router>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dash />} />
-          <Route path="/profile" element={<MyProfile />} />
-          <Route path="/project-ideas" element={<ProjectIdeas />} />
-          <Route path="/submit-idea" element={<SubmitIdea />} />
-          <Route path="/groups" element={<GroupList />} />
-          <Route path="/create-group" element={<CreateGroup />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-        </Routes>
-
-      </Router>
+      <ChatProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ChatProvider>
     </div>
   )
 }
