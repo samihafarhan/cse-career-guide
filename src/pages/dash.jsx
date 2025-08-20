@@ -81,6 +81,18 @@ const Dash = () => {
               </p>
             </CardContent>
           </Card>
+          
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/career-path')}>
+            <CardHeader>
+              <CardTitle className="text-xl text-indigo-600">Career Path</CardTitle>
+              <CardDescription>See which path you are best suited for</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Discover your ideal career path based on your skills and interests.
+              </p>
+            </CardContent>
+          </Card>
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/news')}>
             <CardHeader>
