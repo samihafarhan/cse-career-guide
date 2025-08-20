@@ -8,35 +8,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import AuthWrapper from '@/components/AuthWrapper'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { useAuthCheck } from '@/context'
 
 const Dash = () => {
   const navigate = useNavigate()
-  const { user, isAuthenticated, loading } = useAuthCheck()
+  const { user, loading } = useAuthCheck()
 
   const navigateToPage = (path) => {
     navigate(path)
   }
 
-  // Show loading while checking authentication
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't render if not authenticated (redirect will happen)
-  if (!isAuthenticated) {
-    return null
+    return <LoadingSpinner fullScreen message="Loading dashboard..." />
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <AuthWrapper>
+      <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Welcome to your Dashboard</h1>
@@ -119,7 +109,8 @@ const Dash = () => {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthWrapper>
   )
 }
 

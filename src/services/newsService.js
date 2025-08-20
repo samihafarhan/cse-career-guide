@@ -1,4 +1,6 @@
 // src/services/newsService.js
+import { createApiErrorHandler } from '../utils/errorHandler'
+
 const NEWS_API_BASE_URL = import.meta.env.VITE_NEWS_URL;
 const API_TOKEN = import.meta.env.VITE_NEWS_API_KEY;
 
@@ -6,6 +8,7 @@ class NewsService {
   constructor() {
     this.baseURL = NEWS_API_BASE_URL;
     this.apiToken = API_TOKEN;
+    this.handleError = createApiErrorHandler('NewsService');
   }
 
   // Get top headlines by category
@@ -22,8 +25,7 @@ class NewsService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Error fetching top headlines:', error);
-      throw error;
+      this.handleError(error, 'Failed to fetch top headlines');
     }
   }
 
@@ -41,8 +43,7 @@ class NewsService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Error searching news:', error);
-      throw error;
+      this.handleError(error, 'Failed to search news');
     }
   }
 
@@ -61,8 +62,7 @@ class NewsService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Error fetching categorized news:', error);
-      throw error;
+      this.handleError(error, 'Failed to fetch categorized news');
     }
   }
 
@@ -80,8 +80,7 @@ class NewsService {
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('Error fetching news sources:', error);
-      throw error;
+      this.handleError(error, 'Failed to fetch news sources');
     }
   }
 }

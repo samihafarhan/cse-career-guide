@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createCareerPath } from "@/services/careerPathservice"
 import { Link, useNavigate } from "react-router-dom"
+import { useAuthCheck } from '@/context'
 
 export default function CareerPath() {
   const navigate = useNavigate()
-  // TODO: Replace this with actual user ID from authentication context or props
-  const userId = "replace_with_actual_user_id"
+  const { user, isAuthenticated, loading } = useAuthCheck()
+  
   const [formData, setFormData] = useState({
     field: "",
     desired_skills: "",
@@ -40,7 +41,7 @@ export default function CareerPath() {
 
     try {
       const careerData = {
-        user_id: userId, // Use dynamic user ID
+        user_id: user.id, // Use actual user ID from context
         field: formData.field.trim(),
         desired_skills: formData.desired_skills.trim(),
         confident_skills: formData.confident_skills.trim(),
@@ -72,6 +73,21 @@ export default function CareerPath() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
   }
 
   return (

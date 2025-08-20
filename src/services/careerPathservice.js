@@ -1,8 +1,12 @@
 // services/careerPathservice.js - Direct Gemini Implementation
 import GeminiService from './geminiService'
+import { createApiErrorHandler } from '../utils/errorHandler'
 
 // In-memory storage for this session
 let careerPathStorage = {}
+
+// Create error handler
+const handleError = createApiErrorHandler('CareerPathService')
 
 /**
  * Generate career suggestion using Gemini AI
@@ -26,8 +30,7 @@ Keep the response concise but comprehensive, around 100-150 words.`
     const suggestion = await GeminiService.generateResponse(prompt)
     return suggestion
   } catch (error) {
-    console.error('Error generating career suggestion:', error)
-    throw new Error(`Failed to generate career suggestion: ${error.message}`)
+    handleError(error, 'Failed to generate career suggestion')
   }
 }
 
@@ -63,8 +66,7 @@ export const createCareerPath = async (careerData) => {
     return result
 
   } catch (error) {
-    console.error("Error creating career path:", error)
-    throw new Error(`Failed to create career path: ${error.message}`)
+    handleError(error, 'Failed to create career path')
   }
 }
 
@@ -86,8 +88,7 @@ export const getCareerPath = async (userId) => {
     throw new Error("No career path found for this user")
 
   } catch (error) {
-    console.error("Error fetching career path:", error)
-    throw new Error(`Failed to fetch career path: ${error.message}`)
+    handleError(error, 'Failed to fetch career path')
   }
 }
 
@@ -102,8 +103,7 @@ export const updateCareerPath = async (userId, updateData) => {
     careerPathStorage[userId] = updated
     return updated
   } catch (error) {
-    console.error("Error updating career path:", error)
-    throw new Error(`Failed to update career path: ${error.message}`)
+    handleError(error, 'Failed to update career path')
   }
 }
 
@@ -115,8 +115,7 @@ export const deleteCareerPath = async (userId) => {
     delete careerPathStorage[userId]
     return { message: "Career path deleted successfully" }
   } catch (error) {
-    console.error("Error deleting career path:", error)
-    throw new Error(`Failed to delete career path: ${error.message}`)
+    handleError(error, 'Failed to delete career path')
   }
 }
 

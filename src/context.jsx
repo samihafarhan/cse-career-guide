@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import useFetch from "./hooks/use-fetch";
-import { getCurrentUser } from "./db/apiAuth";
+import { getCurrentUser, logout as apiLogout } from "./db/apiAuth";
 import supabase from "./db/supabase";
 
 const urlcontext = createContext()
@@ -10,6 +10,16 @@ const UrlProvider = ({children}) => {
     const {data:user, error, loading, fn:fetchuser} = useFetch(getCurrentUser)
     const [isSessionLoaded, setIsSessionLoaded] = useState(false)
     const isAuthenticated = user?.role === "authenticated"
+
+    const logout = async () => {
+        try {
+            await apiLogout()
+            // The auth state change listener will handle fetching user data
+        } catch (error) {
+            console.error('Error logging out:', error)
+            throw error
+        }
+    }
 
     useEffect(() => {
         // Listen for auth changes
@@ -31,7 +41,7 @@ const UrlProvider = ({children}) => {
         return () => subscription.unsubscribe()
     }, [])
     return (
-        <urlcontext.Provider value={{user, fetchuser, loading, isAuthenticated, isSessionLoaded}}>
+        <urlcontext.Provider value={{user, fetchuser, loading, isAuthenticated, isSessionLoaded, logout}}>
             {children}
         </urlcontext.Provider>
     )
@@ -48,10 +58,10 @@ export const UrlState = () => {
  */
 export const useAuthCheck = (skipCheck = false) => {
     const navigate = useNavigate()
-    const { user, isAuthenticated, loading, isSessionLoaded } = UrlState()
+    const { user, isAuthenticated, loading, isSessionLoaded, logout } = UrlState()
 
     useEffect(() => {
-        // Skip check if explicitly requested (for landing page)
+        // Skip check if explicitly requested (for landing page and auth page)
         if (skipCheck) return
 
         // Don't redirect while still loading user data or session is not loaded
@@ -68,7 +78,8 @@ export const useAuthCheck = (skipCheck = false) => {
     return {
         user,
         isAuthenticated,
-        loading: loading || !isSessionLoaded
+        loading: loading || !isSessionLoaded,
+        logout
     }
 }
 

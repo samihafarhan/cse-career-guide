@@ -12,6 +12,7 @@ import InterviewQuestions from './pages/interviewquestions.jsx'
 import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
 import Header from './components/Header.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
+import { Toaster } from '@/components/ui/sonner'
 import CareerPath from "./pages/careerpath.jsx"
 import CareerResult from "./pages/careerresult.jsx"
 import SeePath from "./pages/seepath.jsx"
@@ -52,6 +53,7 @@ function App() {
       <ChatProvider>
         <Router>
           <AppContent />
+          <Toaster />
         </Router>
       </ChatProvider>
     </div>

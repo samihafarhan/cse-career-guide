@@ -6,20 +6,56 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { BeatLoader } from 'react-spinners'
 import Error from '@/components/error'
+import AuthWrapper from '@/components/AuthWrapper'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import useFetch from '../hooks/use-fetch'
-import { getUserProfile } from '../services/profileService'
+import useProfileUpdate from '../hooks/useProfileUpdate'
+import { 
+  getUserProfile, 
+  updateUsername, 
+  checkUsernameExists, 
+  updateOrganization, 
+  updateBio, 
+  updateGradYear, 
+  updateSkills,
+  updateRole,
+  updateAvatarUrl
+} from '../services/profileService'
 import { useAuthCheck } from '@/context'
 
 const MyProfile = () => {
-    const [profileError, setProfileError] = useState(null)
-    const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
+    // Username state with availability checking
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false)
+    const [usernameAvailable, setUsernameAvailable] = useState(null)
+    
+    const { user } = useAuthCheck()
 
     // Use the useFetch hook for profile data
     const {data: userProfile, error, loading, fn: fetchProfile} = useFetch(getUserProfile)
+
+    // Profile update hooks
+    const usernameUpdate = useProfileUpdate(updateUsername, () => fetchProfile(user.id))
+    const organizationUpdate = useProfileUpdate(updateOrganization, () => fetchProfile(user.id))
+    const bioUpdate = useProfileUpdate(updateBio, () => fetchProfile(user.id))
+    const gradYearUpdate = useProfileUpdate(updateGradYear, () => fetchProfile(user.id))
+    const skillsUpdate = useProfileUpdate(updateSkills, () => fetchProfile(user.id))
+    const roleUpdate = useProfileUpdate(updateRole, () => fetchProfile(user.id))
+    const avatarUrlUpdate = useProfileUpdate(updateAvatarUrl, () => fetchProfile(user.id))
 
     // Fetch user profile data using the user ID from context
     useEffect(() => {
@@ -28,24 +64,41 @@ const MyProfile = () => {
         }
     }, [user])
 
-    if (authLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <BeatLoader size={15} color="blue" />
-            </div>
-        )
-    }
+    // Debounced username availability check
+    useEffect(() => {
+        const checkUsername = async () => {
+            if (!usernameUpdate.newValue.trim() || usernameUpdate.newValue.trim() === userProfile?.username || !user?.id) {
+                setUsernameAvailable(null)
+                return
+            }
 
-    if (!isAuthenticated) {
-        return null
+            setIsCheckingUsername(true)
+            try {
+                const exists = await checkUsernameExists(usernameUpdate.newValue.trim(), user.id)
+                setUsernameAvailable(!exists)
+            } catch (err) {
+                console.error('Error checking username:', err)
+                setUsernameAvailable(null)
+            } finally {
+                setIsCheckingUsername(false)
+            }
+        }
+
+        const timeoutId = setTimeout(checkUsername, 500)
+        return () => clearTimeout(timeoutId)
+    }, [usernameUpdate.newValue, userProfile?.username, user?.id])
+
+    // Custom username update handler with availability check
+    const handleUsernameUpdate = async () => {
+        if (usernameAvailable === false) {
+            usernameUpdate.setError('This username is already taken. Please choose a different one.')
+            return
+        }
+        await usernameUpdate.handleUpdate(user.id, usernameUpdate.newValue, 'Username')
     }
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <BeatLoader size={15} color="blue" />
-            </div>
-        )
+        return <LoadingSpinner fullScreen message="Loading profile..." />
     }
 
     if (error) {
@@ -57,122 +110,607 @@ const MyProfile = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-center">My Profile</h1>
-                
-                {/* User Authentication Info */}
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle>Authentication Details</CardTitle>
-                        <CardDescription>Current user authentication information</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {user ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-gray-500">User ID</Label>
-                                    <p className="text-sm font-mono bg-gray-100 p-2 rounded">{user.id}</p>
+        <AuthWrapper>
+            <div className="container mx-auto px-4 py-8">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-8 text-center">My Profile</h1>
+                    
+                    {/* User Authentication Info */}
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle>Authentication Details</CardTitle>
+                            <CardDescription>{userProfile?.username || ''} Authentication Information</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {user ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="text-gray-500">User ID</Label>
+                                        <p className="text-sm font-mono bg-gray-100 p-2 rounded">{user.id}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-gray-500">Email</Label>
+                                        <p className="text-sm">{user.email}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-gray-500">Created At</Label>
+                                        <p className="text-sm">{new Date(user.created_at).toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <Label className="text-gray-500">Last Sign In</Label>
+                                        <p className="text-sm">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'N/A'}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label className="text-gray-500">Email</Label>
-                                    <p className="text-sm">{user.email}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Created At</Label>
-                                    <p className="text-sm">{new Date(user.created_at).toLocaleString()}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Last Sign In</Label>
-                                    <p className="text-sm">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'N/A'}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <p className="text-gray-500">No user data available</p>
-                        )}
-                    </CardContent>
-                </Card>
+                            ) : (
+                                <p className="text-gray-500">No user data available</p>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                {/* Profile Information */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Profile Information</CardTitle>
-                        <CardDescription>User profile data from the profiles table</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {userProfile ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <Label className="text-gray-500">Username</Label>
-                                    <p className="text-lg">{userProfile.username || 'Not available'}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Email</Label>
-                                    <p className="text-lg">{userProfile.email || 'Not available'}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Graduation Year</Label>
-                                    <p className="text-lg">{userProfile.grad_year || 'Not available'}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Organization</Label>
-                                    <p className="text-lg">{userProfile.organization || 'Not available'}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Role</Label>
-                                    <p className="text-lg">{userProfile.role || 'Not available'}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-gray-500">Avatar URL</Label>
-                                    <p className="text-sm break-all">{userProfile.avatar_url || 'Not available'}</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <Label className="text-gray-500">Bio</Label>
-                                    <p className="text-lg mt-1">{userProfile.bio || 'Not available'}</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <Label className="text-gray-500">Skills</Label>
-                                    <p className="text-lg mt-1">{userProfile.skills || 'Not available'}</p>
-                                </div>
-                                {userProfile.pfp && (
-                                    <div className="md:col-span-2">
-                                        <Label className="text-gray-500">Profile Picture</Label>
-                                        <img 
-                                            src={userProfile.pfp} 
-                                            alt="Profile" 
-                                            className="mt-2 w-32 h-32 object-cover rounded-full"
-                                            onError={(e) => {
-                                                e.target.style.display = 'none'
-                                            }}
-                                        />
+                    {/* Profile Information */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Profile Information</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {userProfile ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Username Section */}
+                                    <div>
+                                        <Label className="text-gray-500">Username</Label>
+                                        <p className="text-lg">{userProfile?.username || 'Not available'}</p>
+                                        
+                                        <Dialog open={usernameUpdate.isDialogOpen} onOpenChange={usernameUpdate.isDialogOpen ? usernameUpdate.closeDialog : () => usernameUpdate.openDialog(userProfile?.username)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => usernameUpdate.openDialog(userProfile?.username)}
+                                                >
+                                                    Edit Username
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Username</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter your new username below. This will be visible to other users.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="username">Username</Label>
+                                                        <Input
+                                                            id="username"
+                                                            type="text"
+                                                            placeholder="Enter your username"
+                                                            value={usernameUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                usernameUpdate.setNewValue(e.target.value)
+                                                                usernameUpdate.setError(null)
+                                                            }}
+                                                            disabled={usernameUpdate.isUpdating}
+                                                        />
+                                                        {/* Username availability feedback */}
+                                                        {isCheckingUsername && (
+                                                            <div className="flex items-center text-sm text-gray-500 mt-1">
+                                                                <BeatLoader size={8} color="gray" />
+                                                                <span className="ml-2">Checking availability...</span>
+                                                            </div>
+                                                        )}
+                                                        {!isCheckingUsername && usernameAvailable === true && usernameUpdate.newValue.trim() && (
+                                                            <div className="text-sm text-green-600 mt-1">
+                                                                ✓ Username available
+                                                            </div>
+                                                        )}
+                                                        {!isCheckingUsername && usernameAvailable === false && usernameUpdate.newValue.trim() && (
+                                                            <div className="text-sm text-red-600 mt-1">
+                                                                ✗ Username already taken
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {usernameUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {usernameUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={usernameUpdate.closeDialog}
+                                                        disabled={usernameUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleUsernameUpdate}
+                                                        disabled={usernameUpdate.isUpdating || !usernameUpdate.newValue.trim() || usernameAvailable === false}
+                                                    >
+                                                        {usernameUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Username'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
-                                )}
-                                {userProfile.avatar_url && !userProfile.pfp && (
-                                    <div className="md:col-span-2">
-                                        <Label className="text-gray-500">Profile Picture</Label>
-                                        <img 
-                                            src={userProfile.avatar_url} 
-                                            alt="Profile" 
-                                            className="mt-2 w-32 h-32 object-cover rounded-full border-2 border-gray-200"
-                                            onError={(e) => {
-                                                e.target.style.display = 'none'
-                                            }}
-                                        />
+
+                                    {/* Email Section (read-only from profile) */}
+                                    <div>
+                                        <Label className="text-gray-500">Email</Label>
+                                        <p className="text-lg">{userProfile?.email || 'Not available'}</p>
                                     </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8">
-                                <p className="text-gray-500 mb-4">No profile data found for this user</p>
-                                <p className="text-sm text-gray-400">
-                                    User ID: {user?.id || 'Unknown'}
-                                </p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+
+                                    {/* Graduation Year Section */}
+                                    <div>
+                                        <Label className="text-gray-500">Graduation Year</Label>
+                                        <p className="text-lg">{userProfile?.grad_year || 'Not available'}</p>
+                                        
+                                        <Dialog open={gradYearUpdate.isDialogOpen} onOpenChange={gradYearUpdate.isDialogOpen ? gradYearUpdate.closeDialog : () => gradYearUpdate.openDialog(userProfile?.grad_year)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => gradYearUpdate.openDialog(userProfile?.grad_year)}
+                                                >
+                                                    Edit Graduation Year
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Graduation Year</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter your expected graduation year.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="gradYear">Graduation Year</Label>
+                                                        <Input
+                                                            id="gradYear"
+                                                            type="number"
+                                                            placeholder="e.g., 2024"
+                                                            value={gradYearUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                gradYearUpdate.setNewValue(e.target.value)
+                                                                gradYearUpdate.setError(null)
+                                                            }}
+                                                            disabled={gradYearUpdate.isUpdating}
+                                                        />
+                                                    </div>
+                                                    {gradYearUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {gradYearUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={gradYearUpdate.closeDialog}
+                                                        disabled={gradYearUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            const year = parseInt(gradYearUpdate.newValue)
+                                                            if (isNaN(year) || year < 1900 || year > 2100) {
+                                                                gradYearUpdate.setError('Please enter a valid graduation year')
+                                                                return
+                                                            }
+                                                            gradYearUpdate.handleUpdate(user.id, year, 'Graduation year')
+                                                        }}
+                                                        disabled={gradYearUpdate.isUpdating}
+                                                    >
+                                                        {gradYearUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Graduation Year'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Organization Section */}
+                                    <div>
+                                        <Label className="text-gray-500">Organization</Label>
+                                        <p className="text-lg">{userProfile?.organization || 'Not available'}</p>
+                                        
+                                        <Dialog open={organizationUpdate.isDialogOpen} onOpenChange={organizationUpdate.isDialogOpen ? organizationUpdate.closeDialog : () => organizationUpdate.openDialog(userProfile?.organization)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => organizationUpdate.openDialog(userProfile?.organization)}
+                                                >
+                                                    Edit Organization
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Organization</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter your current organization or university.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="organization">Organization</Label>
+                                                        <Input
+                                                            id="organization"
+                                                            type="text"
+                                                            placeholder="Enter your organization"
+                                                            value={organizationUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                organizationUpdate.setNewValue(e.target.value)
+                                                                organizationUpdate.setError(null)
+                                                            }}
+                                                            disabled={organizationUpdate.isUpdating}
+                                                        />
+                                                    </div>
+                                                    {organizationUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {organizationUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={organizationUpdate.closeDialog}
+                                                        disabled={organizationUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => organizationUpdate.handleUpdate(user.id, organizationUpdate.newValue, 'Organization')}
+                                                        disabled={organizationUpdate.isUpdating}
+                                                    >
+                                                        {organizationUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Organization'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Role Section */}
+                                    <div>
+                                        <Label className="text-gray-500">Role</Label>
+                                        <p className="text-lg">{userProfile?.role || 'Not available'}</p>
+                                        
+                                        <Dialog open={roleUpdate.isDialogOpen} onOpenChange={roleUpdate.isDialogOpen ? roleUpdate.closeDialog : () => roleUpdate.openDialog(userProfile?.role)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => roleUpdate.openDialog(userProfile?.role)}
+                                                >
+                                                    Edit Role
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Role</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter your current role or position.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="role">Role</Label>
+                                                        <Input
+                                                            id="role"
+                                                            type="text"
+                                                            placeholder="e.g., Software Engineer, Student, etc."
+                                                            value={roleUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                roleUpdate.setNewValue(e.target.value)
+                                                                roleUpdate.setError(null)
+                                                            }}
+                                                            disabled={roleUpdate.isUpdating}
+                                                        />
+                                                    </div>
+                                                    {roleUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {roleUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={roleUpdate.closeDialog}
+                                                        disabled={roleUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => roleUpdate.handleUpdate(user.id, roleUpdate.newValue, 'Role')}
+                                                        disabled={roleUpdate.isUpdating}
+                                                    >
+                                                        {roleUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Role'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Avatar URL Section */}
+                                    <div>
+                                        <Label className="text-gray-500">Avatar URL</Label>
+                                        <p className="text-sm break-all">{userProfile?.avatar_url || 'Not available'}</p>
+                                        
+                                        <Dialog open={avatarUrlUpdate.isDialogOpen} onOpenChange={avatarUrlUpdate.isDialogOpen ? avatarUrlUpdate.closeDialog : () => avatarUrlUpdate.openDialog(userProfile?.avatar_url)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => avatarUrlUpdate.openDialog(userProfile?.avatar_url)}
+                                                >
+                                                    Edit Avatar URL
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Avatar URL</DialogTitle>
+                                                    <DialogDescription>
+                                                        Enter a URL to your profile picture or avatar image.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="avatarUrl">Avatar URL</Label>
+                                                        <Input
+                                                            id="avatarUrl"
+                                                            type="url"
+                                                            placeholder="https://example.com/avatar.jpg"
+                                                            value={avatarUrlUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                avatarUrlUpdate.setNewValue(e.target.value)
+                                                                avatarUrlUpdate.setError(null)
+                                                            }}
+                                                            disabled={avatarUrlUpdate.isUpdating}
+                                                        />
+                                                    </div>
+                                                    {avatarUrlUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {avatarUrlUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={avatarUrlUpdate.closeDialog}
+                                                        disabled={avatarUrlUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => avatarUrlUpdate.handleUpdate(user.id, avatarUrlUpdate.newValue, 'Avatar URL')}
+                                                        disabled={avatarUrlUpdate.isUpdating}
+                                                    >
+                                                        {avatarUrlUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Avatar URL'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Bio Section */}
+                                    <div className="md:col-span-2">
+                                        <Label className="text-gray-500">Bio</Label>
+                                        <p className="text-lg">{userProfile?.bio || 'Not available'}</p>
+                                        
+                                        <Dialog open={bioUpdate.isDialogOpen} onOpenChange={bioUpdate.isDialogOpen ? bioUpdate.closeDialog : () => bioUpdate.openDialog(userProfile?.bio)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => bioUpdate.openDialog(userProfile?.bio)}
+                                                >
+                                                    Edit Bio
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Bio</DialogTitle>
+                                                    <DialogDescription>
+                                                        Tell others about yourself, your interests, and goals.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="bio">Bio</Label>
+                                                        <Textarea
+                                                            id="bio"
+                                                            placeholder="Enter your bio"
+                                                            value={bioUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                bioUpdate.setNewValue(e.target.value)
+                                                                bioUpdate.setError(null)
+                                                            }}
+                                                            disabled={bioUpdate.isUpdating}
+                                                            rows={4}
+                                                        />
+                                                    </div>
+                                                    {bioUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {bioUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={bioUpdate.closeDialog}
+                                                        disabled={bioUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => bioUpdate.handleUpdate(user.id, bioUpdate.newValue, 'Bio')}
+                                                        disabled={bioUpdate.isUpdating}
+                                                    >
+                                                        {bioUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Bio'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Skills Section */}
+                                    <div className="md:col-span-2">
+                                        <Label className="text-gray-500">Skills</Label>
+                                        <p className="text-lg">{userProfile?.skills || 'Not available'}</p>
+                                        
+                                        <Dialog open={skillsUpdate.isDialogOpen} onOpenChange={skillsUpdate.isDialogOpen ? skillsUpdate.closeDialog : () => skillsUpdate.openDialog(userProfile?.skills)}>
+                                            <DialogTrigger asChild>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="mt-2"
+                                                    onClick={() => skillsUpdate.openDialog(userProfile?.skills)}
+                                                >
+                                                    Edit Skills
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Update Skills</DialogTitle>
+                                                    <DialogDescription>
+                                                        List your technical skills, programming languages, frameworks, etc.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <Label htmlFor="skills">Skills</Label>
+                                                        <Textarea
+                                                            id="skills"
+                                                            placeholder="e.g., JavaScript, React, Python, Node.js..."
+                                                            value={skillsUpdate.newValue}
+                                                            onChange={(e) => {
+                                                                skillsUpdate.setNewValue(e.target.value)
+                                                                skillsUpdate.setError(null)
+                                                            }}
+                                                            disabled={skillsUpdate.isUpdating}
+                                                            rows={3}
+                                                        />
+                                                    </div>
+                                                    {skillsUpdate.error && (
+                                                        <div className="text-red-500 text-sm">
+                                                            {skillsUpdate.error}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={skillsUpdate.closeDialog}
+                                                        disabled={skillsUpdate.isUpdating}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => skillsUpdate.handleUpdate(user.id, skillsUpdate.newValue, 'Skills')}
+                                                        disabled={skillsUpdate.isUpdating}
+                                                    >
+                                                        {skillsUpdate.isUpdating ? (
+                                                            <>
+                                                                <BeatLoader size={8} color="white" />
+                                                                <span className="ml-2">Updating...</span>
+                                                            </>
+                                                        ) : (
+                                                            'Update Skills'
+                                                        )}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    {/* Profile Picture Display */}
+                                    {userProfile?.pfp && (
+                                        <div className="md:col-span-2">
+                                            <Label className="text-gray-500">Profile Picture</Label>
+                                            <img
+                                                src={userProfile.pfp}
+                                                alt="Profile"
+                                                className="mt-2 w-32 h-32 object-cover rounded-full"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    {userProfile?.avatar_url && !userProfile?.pfp && (
+                                        <div className="md:col-span-2">
+                                            <Label className="text-gray-500">Profile Picture</Label>
+                                            <img
+                                                src={userProfile.avatar_url}
+                                                alt="Profile"
+                                                className="mt-2 w-32 h-32 object-cover rounded-full border-2 border-gray-200"
+                                                onError={(e) => {
+                                                    e.target.style.display = 'none'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500">No profile data available</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </AuthWrapper>
     )
 }
 

@@ -9,9 +9,13 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthCheck();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const handleProfile = () => {
