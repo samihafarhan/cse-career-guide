@@ -12,6 +12,9 @@ import InterviewQuestions from './pages/interviewquestions.jsx'
 import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
 import Header from './components/Header.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
+import CareerPath from "./pages/careerpath.jsx"
+import CareerResult from "./pages/careerresult.jsx"
+import SeePath from "./pages/seepath.jsx"
 import './App.css'
 
 function AppContent() {
@@ -34,6 +37,10 @@ function AppContent() {
         <Route path="/news" element={<NewsPage />} />
         <Route path="/interview-questions" element={<InterviewQuestions />} />
         <Route path="/submit-interview-question" element={<SubmitInterviewQuestion />} />
+        <Route path="/career-path" element={<CareerPath />} />
+        <Route path="/careerpath" element={<CareerPath />} />
+        <Route path="/careerresult" element={<CareerResult />} />
+        <Route path="/seepath" element={<SeePath />} /> {/* Add this line */}
       </Routes>
     </>
   );
