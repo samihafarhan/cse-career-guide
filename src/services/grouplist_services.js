@@ -24,16 +24,16 @@ export const getAllGroups = async () => { //exports an asynchronous function nam
  * @param {string} projectId - The ID of the project
  * @returns {Promise<Array>} Array of groups for the specific project
  */
-export const getGroupsByProjectId = async (projectId) => {
+export const getGroupsByProjectId = async (projectId) => {  //fetch from db
   const { data, error } = await supabase
     .from('group_desc')
     .select('*') // Get all columns
-    .eq('project_id', projectId) // WHERE project_id = ?
+    .eq('project_id', projectId) 
     .order('name', { ascending: true })
 
   if (error) throw new Error(error.message)
-  
-  return data || []
+
+  return data || [] // Return an empty array if no data found
 }
 
 /**
@@ -42,7 +42,7 @@ export const getGroupsByProjectId = async (projectId) => {
  * @returns {Promise<Array>} Array of groups with project information
  */
 export const getGroupsWithProjectDetails = async (projectId = null) => {
-  let query = supabase
+  let query = supabase // Initialize query variable with Supabase client
     .from('group_desc')
     .select(`
       *,
@@ -75,7 +75,7 @@ export const getGroupsWithProjectDetails = async (projectId = null) => {
  * @param {string} groupData.project_id - ID of the associated project
  * @returns {Promise<Object>} Created group data
  */
-export const createGroup = async (groupData) => {
+export const createGroup = async (groupData) => { //groupdata is an obj with data to create new group
   const { data, error } = await supabase
     .from('group_desc')
     .insert([
@@ -85,8 +85,8 @@ export const createGroup = async (groupData) => {
         introduction: groupData.introduction
       }
     ])
-    .select()
-    .single()
+    .select() 
+    .single() // Get the newly created group
 
   if (error) throw new Error(error.message)
   

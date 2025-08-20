@@ -15,16 +15,10 @@ import { useAuthCheck } from '@/context'
 const projectIdeaSchema = Yup.object().shape({
   title: Yup.string()
     .required('Project title is required')
-    .min(5, 'Title must be at least 5 characters')
-    .max(100, 'Title must be less than 100 characters'),
+    .max(100, 'Title is too long'),
   description: Yup.string()
     .required('Project description is required')
-    .min(20, 'Description must be at least 20 characters')
-    .max(1000, 'Description must be less than 1000 characters'),
-  submitted_by: Yup.string()
-    .required('Submitter name is required')
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be less than 50 characters')
+    .max(1000, 'Description is too long')
 })
 
 const SubmitIdea = () => {
@@ -53,13 +47,8 @@ const SubmitIdea = () => {
           const profile = await getUserProfile(user.id)
           setUserProfile(profile)
           
-          // Auto-fill submitted_by with username or email
-          if (profile?.username) {
-            setFormData(prev => ({
-              ...prev,
-              submitted_by: profile.username
-            }))
-          } else if (user?.email) {
+          // Auto-fill submitted_by with user's email (unchangeable)
+          if (user?.email) {
             setFormData(prev => ({
               ...prev,
               submitted_by: user.email
@@ -86,6 +75,12 @@ const SubmitIdea = () => {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target
+    
+    // Prevent changing the submitted_by field
+    if (name === 'submitted_by') {
+      return
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -127,8 +122,14 @@ const SubmitIdea = () => {
     try {
       setLoading(true)
       
+      // Ensure submitted_by is always the authenticated user's email
+      const submissionData = {
+        ...formData,
+        submitted_by: user?.email
+      }
+      
       // Submit project idea to database
-      await submitProjectIdea(formData)
+      await submitProjectIdea(submissionData)
       
       // Navigate back to project ideas page with success message
       navigate('/project-ideas?submitted=true')
@@ -243,20 +244,20 @@ const SubmitIdea = () => {
             {/* Submitted By */}
             <div>
               <Label htmlFor="submitted_by" className="block text-gray-700 mb-2">
-                Submitted By *
+                Submitted By
               </Label>
               <Input
                 id="submitted_by"
                 name="submitted_by"
                 type="text"
                 value={formData.submitted_by}
-                onChange={handleChange}
-                placeholder="Your name or identifier"
-                className={errors.submitted_by ? 'border-red-500' : ''}
+                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
               />
-              {errors.submitted_by && (
-                <p className="text-red-500 text-sm mt-1">{errors.submitted_by}</p>
-              )}
+              <p className="text-sm text-gray-500 mt-1">
+                This field is automatically set to your email address and cannot be changed.
+              </p>
             </div>
 
             {/* Submit Error */}
