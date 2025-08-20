@@ -1,8 +1,9 @@
-// careerresult.jsx - Working Version
+// careerresult.jsx - Updated Version
 "use client"
 
 import { useState, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
+import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
 import { getCareerPath } from "@/services/careerPathservice"
 
@@ -18,7 +19,7 @@ export default function CareerResult() {
       try {
         const id = searchParams.get("id")
         console.log("Fetching career data for ID:", id)
-        
+
         if (!id) {
           setError("No career path ID provided")
           return
@@ -27,7 +28,6 @@ export default function CareerResult() {
         const data = await getCareerPath(id)
         console.log("Career data fetched:", data)
         setCareerData(data)
-        
       } catch (error) {
         console.error("Failed to fetch career data:", error)
         setError(`Failed to load career data: ${error.message}`)
@@ -78,19 +78,46 @@ export default function CareerResult() {
             <div className="flex items-center justify-center mb-4">
               <div className="bg-green-100 rounded-full p-2 mr-2">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Your AI-Powered Career Guidance</h2>
             </div>
-            <p className="text-lg text-gray-800 leading-relaxed whitespace-pre-line">
-              {careerData.suggestion || "Processing your career guidance..."}
-            </p>
+            <div className="text-left">
+              <div className="text-lg text-gray-800 leading-relaxed">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => <h1 className="text-xl font-bold mb-3 text-gray-900">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 text-gray-800">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-base font-medium mb-2 text-gray-700">{children}</h3>,
+                    p: ({ children }) => <p className="mb-3 text-gray-800 leading-relaxed">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="text-gray-800">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                    em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+                    code: ({ children }) => (
+                      <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">{children}</code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>
+                    ),
+                  }}
+                >
+                  {careerData.suggestion || "Processing your career guidance..."}
+                </ReactMarkdown>
+              </div>
+            </div>
           </div>
 
           {/* See Path Button */}
           {careerData.suggestion && (
-            <Button 
+            <Button
               className="bg-green-600 hover:bg-green-700 text-white px-16 py-4 text-lg rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
               onClick={() => navigate(`/seepath?result=${encodeURIComponent(careerData.suggestion)}`)}
             >
@@ -116,17 +143,14 @@ export default function CareerResult() {
 
           {/* Action Buttons */}
           <div className="flex justify-center gap-4 mt-8">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => navigate("/careerpath")}
               className="border-green-600 text-green-600 hover:bg-green-50"
             >
               Generate New Path
             </Button>
-            <Button 
-              variant="outline"
-              onClick={() => window.history.back()}
-            >
+            <Button variant="outline" onClick={() => window.history.back()}>
               Go Back
             </Button>
           </div>
