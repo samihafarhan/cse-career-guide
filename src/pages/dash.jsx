@@ -93,6 +93,18 @@ const Dash = () => {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/interview-questions')}>
+            <CardHeader>
+              <CardTitle className="text-xl text-indigo-600">Interview Questions</CardTitle>
+              <CardDescription>Prepare for technical interviews</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Practice with curated interview questions and solutions.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
