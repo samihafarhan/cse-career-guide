@@ -8,6 +8,8 @@ import SubmitIdea from './pages/submitidea.jsx'
 import GroupList from './pages/grouplist.jsx'
 import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
+import InterviewQuestions from './pages/interviewquestions.jsx'
+import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
 import Header from './components/Header.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
 import CareerPath from "./pages/careerpath.jsx"
@@ -33,6 +35,8 @@ function AppContent() {
         <Route path="/groups" element={<GroupList />} />
         <Route path="/create-group" element={<CreateGroup />} />
         <Route path="/news" element={<NewsPage />} />
+        <Route path="/interview-questions" element={<InterviewQuestions />} />
+        <Route path="/submit-interview-question" element={<SubmitInterviewQuestion />} />
         <Route path="/career-path" element={<CareerPath />} />
         <Route path="/careerpath" element={<CareerPath />} />
         <Route path="/careerresult" element={<CareerResult />} />
