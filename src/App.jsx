@@ -10,6 +10,8 @@ import CreateGroup from './pages/creategroup.jsx'
 import NewsPage from './pages/newspage.jsx'
 import InterviewQuestions from './pages/interviewquestions.jsx'
 import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
+import WorkOpportunities from './pages/workopportunities.jsx'
+import SubmitWorkOpportunity from './pages/submitworkopportunity.jsx'
 import Feedback from './pages/feedback.jsx'
 import PostFeedback from './pages/postfeedback.jsx'
 import Header from './components/Header.jsx'
@@ -43,6 +45,8 @@ function AppContent() {
         <Route path="/news" element={<NewsPage />} />
         <Route path="/interview-questions" element={<InterviewQuestions />} />
         <Route path="/submit-interview-question" element={<SubmitInterviewQuestion />} />
+        <Route path="/work-opportunities" element={<WorkOpportunities />} />
+        <Route path="/submit-work-opportunity" element={<SubmitWorkOpportunity />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/post-feedback" element={<PostFeedback />} />
         <Route path="/career-path" element={<CareerPath />} />

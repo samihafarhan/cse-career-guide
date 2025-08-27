@@ -107,6 +107,28 @@ const Dash = () => {
               </p>
             </CardContent>
           </Card>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/work-opportunities')}>
+            <CardHeader>
+              <CardTitle className="text-xl text-teal-600">Work Opportunities</CardTitle>
+              <CardDescription>Explore jobs and internships</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Find internships and job opportunities curated by faculty and alumni.
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/feedback')}>
+            <CardHeader>
+              <CardTitle className="text-xl text-red-600">User Feedback</CardTitle>
+              <CardDescription>Provide feedback for the admins</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">
+                Admins are humans too! Let them know how they can improve the platform.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
       </div>
