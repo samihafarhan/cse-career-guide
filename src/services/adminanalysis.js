@@ -1,4 +1,3 @@
-// services/adminanalysis.js
 import supabase from '../db/supabase'
 
 class AdminAnalyticsService {
