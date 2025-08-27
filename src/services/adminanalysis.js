@@ -1,163 +1,207 @@
-// services/adminanalysis.js - Ultra minimal analytics using your existing tables
-
-import { supabase } from '../config/supabaseClient'
+// services/adminanalysis.js
+import supabase from '../db/supabase'
 
 class AdminAnalyticsService {
   
-  // Login Analytics - Use existing users table
-  async getLoginAnalytics() {
+  // Get comprehensive overview statistics
+  async getOverviewStats() {
     try {
-      const { data: users, error } = await supabase
-        .from('profiles')
-        .select('*')
-      
-      if (error) throw error;
+      console.log('Fetching overview statistics...');
 
-      const now = new Date();
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      const newUsersThisWeek = users.filter(user => 
-        new Date(user.created_at) >= oneWeekAgo
-      ).length;
-
-      const newUsersThisMonth = users.filter(user => 
-        new Date(user.created_at) >= oneMonthAgo
-      ).length;
-
-      return {
-        totalUsers: users.length,
-        newUsersThisWeek,
-        newUsersThisMonth,
-        dailySignups: this.groupByDate(users, 'created_at'),
-        summary: `${users.length} total users, ${newUsersThisWeek} new this week`
-      };
-    } catch (error) {
-      console.error('Error fetching login analytics:', error);
-      return { totalUsers: 0, newUsersThisWeek: 0, newUsersThisMonth: 0, summary: 'Error loading data' };
-    }
-  }
-
-  // Usage Analytics - Use existing tables
-  async getUsageAnalytics() {
-    try {
-      const { data: projects } = await supabase.from('career_path').select('*');
-      const { data: groups } = await supabase.from('interview_questions').select('*');
-      const { data: feedback } = await supabase.from('feedback').select('*');
-
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-      const recentProjects = projects?.filter(p => new Date(p.created_at) >= oneWeekAgo).length || 0;
-      const recentQuestions = groups?.filter(q => new Date(q.created_at) >= oneWeekAgo).length || 0;
-      const recentFeedback = feedback?.filter(f => new Date(f.created_at) >= oneWeekAgo).length || 0;
-
-      return {
-        totalProjects: projects?.length || 0,
-        totalQuestions: groups?.length || 0,
-        totalFeedback: feedback?.length || 0,
-        recentActivity: recentProjects + recentQuestions + recentFeedback,
-        weeklyActivity: {
-          projects: recentProjects,
-          questions: recentQuestions,
-          feedback: recentFeedback
-        },
-        summary: `${projects?.length || 0} career paths, ${groups?.length || 0} questions, ${feedback?.length || 0} feedback`
-      };
-    } catch (error) {
-      console.error('Error fetching usage analytics:', error);
-      return { totalProjects: 0, totalQuestions: 0, totalFeedback: 0, summary: 'Error loading data' };
-    }
-  }
-
-  // Popularity Analytics - Use existing tables
-  async getPopularityAnalytics() {
-    try {
-      const { data: users } = await supabase.from('profiles').select('*');
-      const { data: feedback } = await supabase.from('feedback').select('*');
-      const { data: userActivities } = await supabase.from('user_activities').select('*');
-
-      // Most active users (based on feedback)
-      const userFeedbackCount = {};
-      feedback?.forEach(f => {
-        if (f.user_id) {
-          userFeedbackCount[f.user_id] = (userFeedbackCount[f.user_id] || 0) + 1;
-        }
-      });
-
-      const topActiveUsers = Object.entries(userFeedbackCount)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([userId, count]) => ({
-          userId,
-          activityCount: count,
-          user: users?.find(u => u.id === userId)
-        }));
-
-      // Recent activity trends
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recentActivities = userActivities?.filter(a => new Date(a.created_at) >= oneWeekAgo) || [];
-
-      return {
-        topActiveUsers,
-        recentActivitiesCount: recentActivities.length,
-        totalActivities: userActivities?.length || 0,
-        feedbackTrend: this.groupByDate(feedback || [], 'created_at'),
-        summary: `${topActiveUsers.length} active users, ${recentActivities.length} recent activities`
-      };
-    } catch (error) {
-      console.error('Error fetching popularity analytics:', error);
-      return { topActiveUsers: [], recentActivitiesCount: 0, summary: 'Error loading data' };
-    }
-  }
-
-  // Combined Dashboard Data
-  async getDashboardData() {
-    try {
-      const [loginData, usageData, popularityData] = await Promise.all([
-        this.getLoginAnalytics(),
-        this.getUsageAnalytics(),
-        this.getPopularityAnalytics()
+      const [
+        { count: totalUsers },
+        { count: totalCareerPaths },
+        { count: totalQuestions },
+        { count: totalFeedback }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('career_path').select('*', { count: 'exact', head: true }),
+        supabase.from('interview_questions').select('*', { count: 'exact', head: true }),
+        supabase.from('feedback').select('*', { count: 'exact', head: true })
       ]);
 
       return {
-        login: loginData,
-        usage: usageData,
-        popularity: popularityData,
-        overview: {
-          totalUsers: loginData.totalUsers,
-          totalProjects: usageData.totalProjects,
-          totalFeedback: usageData.totalFeedback,
-          recentActivity: usageData.recentActivity,
-          growthThisWeek: loginData.newUsersThisWeek
-        }
+        totalUsers: totalUsers || 0,
+        totalCareerPaths: totalCareerPaths || 0,
+        totalQuestions: totalQuestions || 0,
+        totalFeedback: totalFeedback || 0
       };
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Error fetching overview stats:', error);
+      return { totalUsers: 0, totalCareerPaths: 0, totalQuestions: 0, totalFeedback: 0 };
+    }
+  }
+
+  // Get new members joined (last 30 days)
+  async getNewMembersInfo() {
+    try {
+      console.log('Fetching new members info...');
+      
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const { count: newMembers, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo.toISOString());
+
+      if (error) {
+        console.error('Error fetching new members:', error);
+        return 0;
+      }
+
+      return newMembers || 0;
+    } catch (error) {
+      console.error('Error fetching new members info:', error);
+      return 0;
+    }
+  }
+
+  // Get user role distribution
+  async getUserRoleDistribution() {
+    try {
+      console.log('Fetching user role distribution...');
+      
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select('role');
+
+      if (error) throw error;
+
+      // Count by role
+      const roleCount = {};
+      users?.forEach(user => {
+        const role = user.role || 'user';
+        roleCount[role] = (roleCount[role] || 0) + 1;
+      });
+
+      // Convert to chart format
+      const distribution = Object.entries(roleCount).map(([role, count]) => ({
+        name: role.charAt(0).toUpperCase() + role.slice(1),
+        count: count
+      }));
+
+      return distribution;
+    } catch (error) {
+      console.error('Error fetching user role distribution:', error);
+      return [];
+    }
+  }
+
+  // Get user engagement metrics
+  async getUserEngagement() {
+    try {
+      console.log('Fetching user engagement metrics...');
+
+      // Get users who have created career paths
+      const { data: pathCreators, error: pathError } = await supabase
+        .from('career_path')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      if (pathError) console.error('Error fetching path creators:', pathError);
+      console.log('Path creators data:', pathCreators);
+
+      const uniquePathCreators = [...new Set(pathCreators?.map(p => p.user_id) || [])];
+
+      // Get users who provided feedback - using email as identifier since feedback table uses email
+      const { data: feedbackUsers, error: feedbackError } = await supabase
+        .from('feedback')
+        .select('email')
+        .not('email', 'is', null);
+
+      if (feedbackError) console.error('Error fetching feedback users:', feedbackError);
+      console.log('Feedback users data:', feedbackUsers);
+
+      const uniqueFeedbackUsers = [...new Set(feedbackUsers?.map(f => f.email) || [])];
+
+      // Get total groups from group_desc table
+      const { count: totalGroups, error: groupsError } = await supabase
+        .from('group_desc')
+        .select('*', { count: 'exact', head: true });
+
+      if (groupsError) console.error('Error fetching groups:', groupsError);
+      console.log('Total groups count:', totalGroups);
+
+      // Get question contributors from interview_questions table - using submitted_by column
+      const { data: questionContributors, error: contributorsError } = await supabase
+        .from('interview_questions')
+        .select('submitted_by')
+        .not('submitted_by', 'is', null);
+
+      if (contributorsError) console.error('Error fetching question contributors:', contributorsError);
+      console.log('Question contributors data:', questionContributors);
+
+      const uniqueQuestionContributors = [...new Set(questionContributors?.map(q => q.submitted_by) || [])];
+
+      // Get total users for percentage calculation
+      const totalUsers = await this.getOverviewStats().then(stats => stats.totalUsers);
+      const careerPathEngagementRate = totalUsers > 0 ? Math.round((uniquePathCreators.length / totalUsers) * 100) : 0;
+
+      const engagementData = {
+        usersWithCareerPaths: uniquePathCreators.length,
+        feedbackContributors: uniqueFeedbackUsers.length,
+        existingGroupNumber: totalGroups || 0,
+        questionContributors: uniqueQuestionContributors.length,
+        careerPathEngagementRate: careerPathEngagementRate
+      };
+
+      console.log('Final engagement data:', engagementData);
+      return engagementData;
+    } catch (error) {
+      console.error('Error fetching user engagement:', error);
       return {
-        login: { totalUsers: 0 },
-        usage: { totalProjects: 0 },
-        popularity: { topActiveUsers: [] },
-        overview: { totalUsers: 0, totalProjects: 0, totalFeedback: 0 }
+        usersWithCareerPaths: 0,
+        feedbackContributors: 0,
+        existingGroupNumber: 0,
+        questionContributors: 0,
+        careerPathEngagementRate: 0
       };
     }
   }
 
-  // Utility function to group data by date
-  groupByDate(data, dateField) {
-    if (!data || data.length === 0) return [];
-    
-    const grouped = {};
-    data.forEach(item => {
-      if (item[dateField]) {
-        const date = new Date(item[dateField]).toDateString();
-        grouped[date] = (grouped[date] || 0) + 1;
-      }
-    });
+  // Main function to get all analytics data
+  async getComprehensiveAnalytics() {
+    try {
+      console.log('Fetching comprehensive analytics...');
 
-    return Object.entries(grouped)
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 30); // Last 30 days
+      const [
+        overview,
+        newMembers,
+        userRoleDistribution,
+        engagement
+      ] = await Promise.all([
+        this.getOverviewStats(),
+        this.getNewMembersInfo(),
+        this.getUserRoleDistribution(),
+        this.getUserEngagement()
+      ]);
+
+      const analyticsData = {
+        overview,
+        newMembers,
+        userRoleDistribution,
+        engagement
+      };
+
+      console.log('Complete analytics data:', analyticsData);
+      return analyticsData;
+
+    } catch (error) {
+      console.error('Error in getComprehensiveAnalytics:', error);
+      return {
+        overview: { totalUsers: 0, totalCareerPaths: 0, totalQuestions: 0, totalFeedback: 0 },
+        newMembers: 0,
+        userRoleDistribution: [],
+        engagement: { 
+          usersWithCareerPaths: 0, 
+          feedbackContributors: 0, 
+          existingGroupNumber: 0, 
+          questionContributors: 0,
+          careerPathEngagementRate: 0 
+        }
+      };
+    }
   }
 }
 
