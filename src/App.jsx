@@ -19,6 +19,9 @@ import CareerPath from "./pages/careerpath.jsx"
 import CareerResult from "./pages/careerresult.jsx"
 import SeePath from "./pages/seepath.jsx"
 import './App.css'
+import AdminDash from './pages/admindash.jsx'
+import AdminAnalysis from './pages/adminanalysis.jsx' 
+import SafetyDashboard from './pages/safety.jsx'  // Add the missing dot
 
 function AppContent() {
   const location = useLocation();
@@ -45,6 +48,9 @@ function AppContent() {
         <Route path="/career-path" element={<CareerPath />} />
         <Route path="/careerresult" element={<CareerResult />} />
         <Route path="/seepath" element={<SeePath />} />
+        <Route path="/admindash" element={<AdminDash />} />
+        <Route path="/adminanalysis" element={<AdminAnalysis />} />
+        <Route path="/safety" element={<SafetyDashboard />} />
       </Routes>
     </>
   );
