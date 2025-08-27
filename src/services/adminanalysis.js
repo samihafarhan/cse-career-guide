@@ -1,6 +1,6 @@
 // services/adminanalysis.js - Ultra minimal analytics using your existing tables
 
-import { supabase } from '../config/supabaseClient'
+import supabase from '../db/supabase'
 
 class AdminAnalyticsService {
   

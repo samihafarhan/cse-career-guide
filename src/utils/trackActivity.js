@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabaseClient' // Adjust path if needed
+import supabase from '../db/supabase'
 
 export const trackActivity = async (featureName, actionType, metadata = {}) => {
   try {

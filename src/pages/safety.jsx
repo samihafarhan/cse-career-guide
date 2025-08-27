@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../config/supabaseClient';
+import supabase from '../db/supabase';
 
 // Safety utility functions
 const SAFETY_KEYWORDS = {
