@@ -49,11 +49,11 @@ const AdminDash = () => {
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border" onClick={() => navigateToPage('/validity')}>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border" onClick={() => navigateToPage('/dashboardAdmin')}>
             <h3 className="text-xl font-semibold text-green-600 mb-2">Role Verification</h3>
-            <p className="text-sm text-gray-500 mb-3">Check validity of roles using ID card image</p>
+            <p className="text-sm text-gray-500 mb-3">Review and approve verification documents</p>
             <p className="text-sm text-gray-600">
-              Verify user roles and permissions by reviewing submitted ID card images and validating authenticity.
+              Review submitted verification PDFs, preview documents, and approve or reject user verification requests.
             </p>
           </div>
 
