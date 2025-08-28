@@ -138,3 +138,54 @@ export const updateRole = async (userId, role) => {
 export const updateAvatarUrl = async (userId, avatarUrl) => {
   return updateProfileField(userId, { avatar_url: avatarUrl })
 }
+
+/**
+ * Create a new user profile
+ * @param {string} userId 
+ * @param {string} email 
+ * @returns {Promise<Object>} 
+ */
+export const createUserProfile = async (userId, email) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: email,
+        role: 'unverified',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return data
+  } catch (error) {
+    throw new Error(`Failed to create user profile: ${error.message}`)
+  }
+}
+
+/**
+ * Get or create user profile (ensures profile exists)
+ * @param {string} userId 
+ * @param {string} email 
+ * @returns {Promise<Object>} 
+ */
+export const getOrCreateUserProfile = async (userId, email) => {
+  try {
+    // Try to get existing profile
+    let profile = await getUserProfile(userId)
+    
+    // If profile doesn't exist, create it
+    if (!profile) {
+      profile = await createUserProfile(userId, email)
+    }
+    
+    return profile
+  } catch (error) {
+    throw new Error(`Failed to get or create user profile: ${error.message}`)
+  }
+}

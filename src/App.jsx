@@ -18,6 +18,8 @@ import { Toaster } from '@/components/ui/sonner'
 import CareerPath from "./pages/careerpath.jsx"
 import CareerResult from "./pages/careerresult.jsx"
 import SeePath from "./pages/seepath.jsx"
+import DashboardAdminSimple from "./pages/dashboardAdminSimple.jsx"
+import Verification from "./pages/verification.jsx"
 import './App.css'
 import AdminDash from "./pages/admindash.jsx"
 import AdminAnalysis from "./pages/adminanalysis.jsx" 
@@ -48,6 +50,8 @@ function AppContent() {
         <Route path="/career-path" element={<CareerPath />} />
         <Route path="/careerresult" element={<CareerResult />} />
         <Route path="/seepath" element={<SeePath />} />
+        <Route path="/verifyRole" element={<Verification />} />
+        <Route path="/dashboardAdmin" element={<DashboardAdminSimple />} />
         <Route path="/admindash" element={<AdminDash />} />
         <Route path="/adminanalysis" element={<AdminAnalysis />} />
         <Route path="/safety" element={<SafetyDashboard />} />
