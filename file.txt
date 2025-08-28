@@ -1,6 +1,0 @@
-wait
-M means modified
-u means new
-now we update the file 
-go tot that tree
-write message here

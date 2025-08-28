@@ -9,7 +9,8 @@ const urlcontext = createContext()
 const UrlProvider = ({children}) => {
     const {data:user, error, loading, fn:fetchuser} = useFetch(getCurrentUser)
     const [isSessionLoaded, setIsSessionLoaded] = useState(false)
-    const isAuthenticated = user?.role === "authenticated"
+    // Check authentication using the presence of user and proper auth fields
+    const isAuthenticated = Boolean(user && (user.aud === "authenticated" || user.email))
 
     const logout = async () => {
         try {

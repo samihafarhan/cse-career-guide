@@ -12,7 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { BeatLoader } from 'react-spinners'
-import { getUserFeedback } from '../services/feedbackService'
+import { getUserFeedback, getAllFeedback } from '../services/feedbackService'
 import { useAuthCheck } from '@/context'
 
 const Feedback = () => {
@@ -23,6 +23,9 @@ const Feedback = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
+  
+  // Check if current user is admin (simplified inline check)
+  const userIsAdmin = user?.role === 'admin'
 
   // Check for success message from URL params
   useEffect(() => {
@@ -34,15 +37,24 @@ const Feedback = () => {
     }
   }, [location, navigate])
 
-  // Fetch user's feedback
+  // Fetch user's feedback or all feedback for admin
   useEffect(() => {
-    const fetchUserFeedback = async () => {
+    const fetchFeedback = async () => {
       if (!user?.email) return
       
       try {
         setLoading(true)
         setError(null)
-        const data = await getUserFeedback(user.email)
+        
+        let data
+        if (userIsAdmin) {
+          // Admin can see all feedback
+          data = await getAllFeedback()
+        } else {
+          // Regular users see only their feedback
+          data = await getUserFeedback(user.email)
+        }
+        
         setFeedbackList(data)
       } catch (err) {
         setError(err.message)
@@ -52,9 +64,9 @@ const Feedback = () => {
     }
 
     if (user?.email) {
-      fetchUserFeedback()
+      fetchFeedback()
     }
-  }, [user])
+  }, [user, userIsAdmin])
 
   // Format date function
   const formatDate = (dateString) => {
@@ -99,14 +111,21 @@ const Feedback = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>My Feedback</CardTitle>
+              <CardTitle>
+                {userIsAdmin ? 'All User Feedback (Admin View)' : 'My Feedback'}
+              </CardTitle>
               <CardDescription>
-                View and manage all your submitted feedback and suggestions
+                {userIsAdmin 
+                  ? 'View and manage all feedback submitted by users across the platform'
+                  : 'View and manage all your submitted feedback and suggestions'
+                }
               </CardDescription>
             </div>
-            <Button onClick={() => navigate('/post-feedback')}>
-              Submit New Feedback
-            </Button>
+            {!userIsAdmin && (
+              <Button onClick={() => navigate('/post-feedback')}>
+                Submit New Feedback
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -156,14 +175,19 @@ const Feedback = () => {
                     />
                   </svg>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    No Feedback Submitted
+                    {userIsAdmin ? 'No Feedback Available' : 'No Feedback Submitted'}
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    You haven't submitted any feedback yet. Share your thoughts and help us improve!
+                    {userIsAdmin 
+                      ? 'No users have submitted any feedback yet.'
+                      : 'You haven\'t submitted any feedback yet. Share your thoughts and help us improve!'
+                    }
                   </p>
-                  <Button onClick={() => navigate('/post-feedback')}>
-                    Submit Your First Feedback
-                  </Button>
+                  {!userIsAdmin && (
+                    <Button onClick={() => navigate('/post-feedback')}>
+                      Submit Your First Feedback
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -171,8 +195,13 @@ const Feedback = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">
-                  Total Feedback: {feedbackList.length}
+                  {userIsAdmin ? 'All Platform Feedback' : 'Your Feedback'}: {feedbackList.length}
                 </h2>
+                {userIsAdmin && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    Admin View
+                  </Badge>
+                )}
               </div>
               
               <Accordion type="single" collapsible className="w-full space-y-4">
@@ -191,6 +220,11 @@ const Feedback = () => {
                           <span className="font-medium text-left">
                             {feedback.feedback_subject}
                           </span>
+                          {userIsAdmin && (
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 hover:text-blue-800">
+                              by {feedback.email}
+                            </Badge>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">
                           {formatDate(feedback.created_at)}

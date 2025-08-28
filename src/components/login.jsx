@@ -40,7 +40,13 @@ const Login = () => {
     const {fetchuser} = UrlState()
     useEffect(() => {
         if (data && !error) {
-            navigate(`/dashboard?${longlink?`createNew=${longlink}`:""}`)
+            // Check if the logged-in user is admin
+            const userEmail = formdata.email
+            if (userEmail === 'admin@admin.com') {
+                navigate(`/admindash?${longlink?`createNew=${longlink}`:""}`)
+            } else {
+                navigate(`/dashboard?${longlink?`createNew=${longlink}`:""}`)
+            }
             fetchuser()
             }
         }, [data, error])

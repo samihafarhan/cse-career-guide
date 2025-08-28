@@ -1,11 +1,33 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthCheck } from '@/context'
 
 const AdminDash = () => {
   const navigate = useNavigate()
+  const { user, loading } = useAuthCheck()
+
+  // Check if user is admin, redirect if not
+  useEffect(() => {
+    if (!loading && user) {
+      if (user.email !== 'admin@admin.com') {
+        console.log('Non-admin user attempting to access admin dashboard, redirecting to regular dashboard')
+        navigate('/dashboard')
+      }
+    }
+  }, [user, loading, navigate])
 
   const navigateToPage = (path) => {
     navigate(path)
+  }
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>
+  }
+
+  // Don't render admin content for non-admin users
+  if (user && user.email !== 'admin@admin.com') {
+    return null
   }
 
   return (
@@ -40,6 +62,13 @@ const AdminDash = () => {
             <p className="text-sm text-gray-500 mb-3">Overseeing all creations and uploads</p>
             <p className="text-sm text-gray-600">
               Monitor and review all user-generated content including project teams, organizations, and articles for ethical compliance and safety.
+            </p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border" onClick={() => navigateToPage('/feedback')}>
+            <h3 className="text-xl font-semibold text-red-600 mb-2">Feedback</h3>
+            <p className="text-sm text-gray-500 mb-3">Checking back on what the users want</p>
+            <p className="text-sm text-gray-600">
+              Monitor user feedback submissions to understand user needs and improve platform features and services.
             </p>
           </div>
         </div>

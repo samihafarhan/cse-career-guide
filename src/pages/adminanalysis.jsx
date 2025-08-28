@@ -7,22 +7,23 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import adminAnalyticsService from '../services/adminanalysis.js'
 
-const AdminAnalysis = () => {
+const AdminAnalyticsDashboard = () => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [timeframe, setTimeframe] = useState('30d')
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
     fetchData()
-  }, [timeframe])
+  }, [])
 
   const fetchData = async () => {
     setLoading(true)
     try {
-      const dashboardData = await adminAnalyticsService.getDashboardData()
-      setData(dashboardData)
+      const analyticsData = await adminAnalyticsService.getComprehensiveAnalytics()
+      setData(analyticsData)
     } catch (error) {
       console.error('Error fetching analytics:', error)
     } finally {
@@ -30,241 +31,231 @@ const AdminAnalysis = () => {
     }
   }
 
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading analytics...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto"></div>
+          <p className="mt-6 text-lg text-gray-700">Loading comprehensive analytics...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-6 py-8">
+        <div className="max-w-8xl mx-auto">
           
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Analytics Dashboard</h1>
-            <p className="text-gray-600">Analysis of Login, Usage, and Popularity metrics</p>
+            <h1 className="text-5xl font-bold text-gray-900 mb-3">Admin Control Center</h1>
+            <p className="text-xl text-gray-600 mb-6">Comprehensive platform analytics and insights</p>
             
-            {/* Timeframe Selector */}
-            <div className="mt-4 flex gap-2">
+            {/* Navigation Tabs */}
+            <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border">
               <Button 
-                variant={timeframe === '7d' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimeframe('7d')}
+                variant={activeTab === 'overview' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('overview')}
+                className="px-6 py-3"
               >
-                7 Days
+                📊 Overview
               </Button>
               <Button 
-                variant={timeframe === '30d' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimeframe('30d')}
+                variant={activeTab === 'engagement' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('engagement')}
+                className="px-6 py-3"
               >
-                30 Days
-              </Button>
-              <Button 
-                variant={timeframe === '90d' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimeframe('90d')}
-              >
-                90 Days
+                🎯 User Engagement
               </Button>
             </div>
           </div>
 
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-white border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-600">
-                  {data?.overview?.totalUsers || 0}
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  +{data?.login?.newUsersThisWeek || 0} this week
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Career Paths</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-600">
-                  {data?.overview?.totalProjects || 0}
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Total available paths
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Feedback Count</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-orange-600">
-                  {data?.overview?.totalFeedback || 0}
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  User feedback received
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Weekly Growth</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-purple-600">
-                  {data?.overview?.growthThisWeek || 0}
-                </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  New users this week
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detailed Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            {/* Login Analytics */}
-            <Card className="bg-white border shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-blue-600">📊 Login Analytics</CardTitle>
-                <CardDescription>User registration and login patterns</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-blue-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">Total Users</p>
-                      <p className="text-2xl font-bold text-blue-600">{data?.login?.totalUsers || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">New This Week</p>
-                      <p className="text-xl font-bold text-gray-700">{data?.login?.newUsersThisWeek || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">New This Month</p>
-                      <p className="text-xl font-bold text-gray-700">{data?.login?.newUsersThisMonth || 0}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-4 border-t">
-                    <p className="text-sm text-gray-600">{data?.login?.summary}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Usage Analytics */}
-            <Card className="bg-white border shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl text-green-600">📈 Usage Analytics</CardTitle>
-                <CardDescription>Platform feature usage statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">Career Paths</p>
-                      <p className="text-2xl font-bold text-green-600">{data?.usage?.totalProjects || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">Interview Questions</p>
-                      <p className="text-xl font-bold text-gray-700">{data?.usage?.totalQuestions || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-semibold">User Feedback</p>
-                      <p className="text-xl font-bold text-gray-700">{data?.usage?.totalFeedback || 0}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-4 border-t">
-                    <p className="text-sm text-gray-600">{data?.usage?.summary}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Popularity Analytics */}
-            <Card className="bg-white border shadow-sm lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-xl text-purple-600">🔥 Popularity Analytics</CardTitle>
-                <CardDescription>Most active users and trending content</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-800">Top Active Users</h3>
-                    {data?.popularity?.topActiveUsers?.length > 0 ? (
-                      data.popularity.topActiveUsers.map((user, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                          <div>
-                            <p className="font-medium">User {index + 1}</p>
-                            <p className="text-sm text-gray-600">{user.activityCount} activities</p>
-                          </div>
-                          <div className="text-purple-600 font-bold">#{index + 1}</div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500">
-                        No active users data available
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Key Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-blue-100 text-sm font-medium">Total Members</p>
+                        <p className="text-3xl font-bold">{data?.overview?.totalUsers || 0}</p>
                       </div>
-                    )}
-                  </div>
+                      <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <span className="text-2xl">👥</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-gray-800">Activity Summary</h3>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="font-medium">Recent Activities</p>
-                      <p className="text-2xl font-bold text-gray-700">{data?.popularity?.recentActivitiesCount || 0}</p>
+                <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-100 text-sm font-medium">Career Paths</p>
+                        <p className="text-3xl font-bold">{data?.overview?.totalCareerPaths || 0}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <span className="text-2xl">🚀</span>
+                      </div>
                     </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <p className="font-medium">Total Activities</p>
-                      <p className="text-2xl font-bold text-gray-700">{data?.popularity?.totalActivities || 0}</p>
-                    </div>
+                  </CardContent>
+                </Card>
 
-                    <div className="mt-4 p-4 border-t">
-                      <p className="text-sm text-gray-600">{data?.popularity?.summary}</p>
+                <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-purple-100 text-sm font-medium">Total Questions</p>
+                        <p className="text-3xl font-bold">{data?.overview?.totalQuestions || 0}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <span className="text-2xl">❓</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-orange-100 text-sm font-medium">Total Feedback</p>
+                        <p className="text-3xl font-bold">{data?.overview?.totalFeedback || 0}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <span className="text-2xl">💬</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-cyan-100 text-sm font-medium">New Members (30d)</p>
+                        <p className="text-3xl font-bold">{data?.newMembers || 0}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                        <span className="text-2xl">✨</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* User Engagement Tab */}
+          {activeTab === 'engagement' && (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                {/* User Distribution by Role */}
+                <Card className="shadow-lg border-0">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-gray-800">👤 User Roles Distribution</CardTitle>
+                    <CardDescription>Breakdown of user types on the platform</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={data?.userRoleDistribution || []}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, value }) => `${name}: ${value}`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="count"
+                          >
+                            {(data?.userRoleDistribution || []).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* User Engagement Metrics */}
+                <Card className="shadow-lg border-0">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-gray-800">⚡ Platform Engagement</CardTitle>
+                    <CardDescription>Key engagement indicators</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700">Users with Career Paths</span>
+                          <span className="text-2xl font-bold text-blue-600">
+                            {data?.engagement?.usersWithCareerPaths || 0}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {data?.engagement?.careerPathEngagementRate || 0}% of total users
+                        </div>
+                      </div>
+                      
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700">Active Feedback Contributors</span>
+                          <span className="text-2xl font-bold text-green-600">
+                            {data?.engagement?.feedbackContributors || 0}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          Users who provided feedback
+                        </div>
+                      </div>
+
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700">Existing Group Number</span>
+                          <span className="text-2xl font-bold text-purple-600">
+                            {data?.engagement?.existingGroupNumber || 0}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          Total groups in the platform
+                        </div>
+                      </div>
+
+                      <div className="bg-orange-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700">Question Contributors</span>
+                          <span className="text-2xl font-bold text-orange-600">
+                            {data?.engagement?.questionContributors || 0}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          Users who contributed questions
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
 
           {/* Refresh Button */}
-          <div className="mt-8 text-center">
-            <Button onClick={fetchData} className="bg-blue-600 hover:bg-blue-700">
-              🔄 Refresh Data
+          <div className="mt-12 text-center">
+            <Button 
+              onClick={fetchData} 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg shadow-lg"
+            >
+              🔄 Refresh Analytics
             </Button>
           </div>
         </div>
@@ -273,4 +264,4 @@ const AdminAnalysis = () => {
   )
 }
 
-export default AdminAnalysis
+export default AdminAnalyticsDashboard
