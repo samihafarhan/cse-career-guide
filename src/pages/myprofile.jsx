@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -39,6 +40,7 @@ import {
 import { useAuthCheck } from '@/context'
 
 const MyProfile = () => {
+    const navigate = useNavigate()
     const [isCheckingUsername, setIsCheckingUsername] = useState(false)
     const [usernameAvailable, setUsernameAvailable] = useState(null)
     
@@ -399,69 +401,14 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Role</Label>
                                         <p className="text-lg">{userProfile?.role || 'Not available'}</p>
                                         
-                                        <Dialog open={roleUpdate.isDialogOpen} onOpenChange={roleUpdate.isDialogOpen ? roleUpdate.closeDialog : () => roleUpdate.openDialog(userProfile?.role)}>
-                                            <DialogTrigger asChild>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    className="mt-2"
-                                                    onClick={() => roleUpdate.openDialog(userProfile?.role)}
-                                                >
-                                                    Edit Role
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Update Role</DialogTitle>
-                                                    <DialogDescription>
-                                                        Enter your current role or position.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <Label htmlFor="role">Role</Label>
-                                                        <Input
-                                                            id="role"
-                                                            type="text"
-                                                            placeholder="e.g., Software Engineer, Student, etc."
-                                                            value={roleUpdate.newValue}
-                                                            onChange={(e) => {
-                                                                roleUpdate.setNewValue(e.target.value)
-                                                                roleUpdate.setError(null)
-                                                            }}
-                                                            disabled={roleUpdate.isUpdating}
-                                                        />
-                                                    </div>
-                                                    {roleUpdate.error && (
-                                                        <div className="text-red-500 text-sm">
-                                                            {roleUpdate.error}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={roleUpdate.closeDialog}
-                                                        disabled={roleUpdate.isUpdating}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => roleUpdate.handleUpdate(user.id, roleUpdate.newValue, 'Role')}
-                                                        disabled={roleUpdate.isUpdating}
-                                                    >
-                                                        {roleUpdate.isUpdating ? (
-                                                            <>
-                                                                <BeatLoader size={8} color="white" />
-                                                                <span className="ml-2">Updating...</span>
-                                                            </>
-                                                        ) : (
-                                                            'Update Role'
-                                                        )}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="mt-2"
+                                            onClick={() => navigate('/verifyRole')}
+                                        >
+                                            Verify Role
+                                        </Button>
                                     </div>
 
                                     {/* Avatar URL Section */}
