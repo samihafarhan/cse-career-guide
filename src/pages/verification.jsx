@@ -9,7 +9,6 @@ import { BeatLoader } from 'react-spinners'
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
 import { uploadVerificationDocumentWithFallback, updateVerificationStatus } from '../services/verificationServiceSimple'
 import { getUserProfile, getOrCreateUserProfile } from '../services/profileService'
-import { fixUserProfileIssues } from '../services/databaseTestService'
 import { useAuthCheck } from '@/context'
 import AuthWrapper from '@/components/AuthWrapper'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -35,19 +34,7 @@ const Verification = () => {
           setUserProfile(profile)
         } catch (error) {
           console.error('Error fetching/creating user profile:', error)
-          // If profile fetch fails, try to fix profile issues
-          try {
-            const fixResult = await fixUserProfileIssues(user.id, user.email)
-            if (fixResult.success) {
-              // Try to fetch profile again after fix
-              const profile = await getUserProfile(user.id)
-              setUserProfile(profile)
-            } else {
-              console.error('Failed to fix profile issues:', fixResult.errors)
-            }
-          } catch (fixError) {
-            console.error('Error fixing profile issues:', fixError)
-          }
+          // Profile creation failed - this will be handled by the UI showing appropriate error states
         }
       }
       setUserLoading(false)
