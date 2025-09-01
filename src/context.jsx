@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import useFetch from "./hooks/use-fetch";
 import { getCurrentUser, logout as apiLogout } from "./db/apiAuth";
+import { checkUserAutoUpgrade } from "./services/autoUpgradeService";
 import supabase from "./db/supabase";
 
 const urlcontext = createContext()
@@ -32,6 +33,20 @@ const UrlProvider = ({children}) => {
                 }
                 if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                     fetchuser()
+                    
+                    // Auto-check for role upgrade when user signs in
+                    if (session?.user?.id) {
+                        // Run auto-upgrade check silently in background
+                        checkUserAutoUpgrade(session.user.id).then(result => {
+                            if (result.upgraded) {
+                                console.log('User auto-upgraded to alumni')
+                                // Refresh user data to show updated role
+                                setTimeout(() => fetchuser(), 1000)
+                            }
+                        }).catch(error => {
+                            console.error('Auto-upgrade check failed:', error)
+                        })
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     fetchuser()
                 }

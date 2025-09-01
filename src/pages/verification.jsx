@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BeatLoader } from 'react-spinners'
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
-import { uploadVerificationDocumentWithFallback, updateVerificationStatus } from '../services/verificationServiceSimple'
+import { uploadVerificationDocumentWithFallback, updateVerificationStatus, fixUserProfileIssues } from '../services/verificationServiceSimple'
 import { getUserProfile, getOrCreateUserProfile } from '../services/profileService'
-import { fixUserProfileIssues } from '../services/databaseTestService'
 import { useAuthCheck } from '@/context'
 import AuthWrapper from '@/components/AuthWrapper'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -99,14 +98,10 @@ const Verification = () => {
       setErrors({}) // Clear previous errors
       
       // Upload document using enhanced method with fallback
-      console.log('Starting document upload...')
       const uploadResult = await uploadVerificationDocumentWithFallback(selectedFile, user.id)
-      console.log('Upload result:', uploadResult)
       
       // Update user profile with verification status
-      console.log('Updating verification status...')
       const profileResult = await updateVerificationStatus(user.id, uploadResult)
-      console.log('Profile update result:', profileResult)
       
       setSubmitSuccess(true)
       

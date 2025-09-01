@@ -15,6 +15,7 @@ import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
 import { createGroup } from '../services/grouplist_services'
 import { getAllProjectIdeas, getUserProfile } from '../services/projectideas_services'
+import { isStudent } from '@/utils/roleUtils'
 import { useAuthCheck } from '@/context'
 import * as Yup from 'yup'
 
@@ -47,11 +48,6 @@ const CreateGroup = () => {
   const [userError, setUserError] = useState(null)
   
   const preSelectedProjectTitle = searchParams.get('projectTitle')
-
-  // Check if current user is a student
-  const isStudent = () => {
-    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'student'
-  }
 
   // Fetch user profile and projects on component mount
   useEffect(() => {
@@ -117,7 +113,8 @@ const CreateGroup = () => {
       const newGroup = await createGroup({
         group_name: formData.groupName,
         introduction: formData.introduction,
-        project_id: formData.projectId
+        project_id: formData.projectId,
+        created_by: user.id
       })
 
       // Navigate back to groups list with success message
@@ -178,7 +175,7 @@ const CreateGroup = () => {
   }
 
   // Check if user is authorized (students only)
-  if (!isStudent()) {
+  if (!isStudent(userProfile)) {
     return (
       <div className="container mx-auto p-6">
         <Card>

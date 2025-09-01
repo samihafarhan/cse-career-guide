@@ -8,10 +8,20 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { BeatLoader } from 'react-spinners'
 import Error from '../components/error'
-import { getGroupsWithProjectDetails } from '../services/grouplist_services'
+import { getGroupsWithDetails } from '../services/grouplist_services'
 import { getUserProfile } from '../services/projectideas_services'
+import { 
+  sendJoinRequest, 
+  getGroupJoinRequests, 
+  approveJoinRequest,
+  rejectJoinRequest,
+  hasExistingJoinRequest,
+  isGroupMember 
+} from '../services/groupJoinService'
+import { isStudent, isProfessor } from '@/utils/roleUtils'
 import { useAuthCheck } from '@/context'
 
 const GroupList = () => {
@@ -25,20 +35,13 @@ const GroupList = () => {
   const [userProfile, setUserProfile] = useState(null)
   const [userLoading, setUserLoading] = useState(true)
   const [userError, setUserError] = useState(null)
+  const [joinRequests, setJoinRequests] = useState({})
+  const [pendingRequests, setPendingRequests] = useState({})
+  const [actionLoading, setActionLoading] = useState({})
   
   const projectId = searchParams.get('projectId')
   const projectTitle = searchParams.get('projectTitle')
   const isGroupCreated = searchParams.get('created')
-
-  // Check if current user is a student
-  const isStudent = () => {
-    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'student'
-  }
-
-  // Check if current user is a professor
-  const isProfessor = () => {
-    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'professor'
-  }
 
   // Fetch user profile
   useEffect(() => {
@@ -84,8 +87,25 @@ const GroupList = () => {
       try {
         setLoading(true)
         setError(null)
-        const data = await getGroupsWithProjectDetails(projectId || null)
+        const data = await getGroupsWithDetails(projectId || null, user?.id)
         setGroups(data)
+        
+        // Load join requests for groups created by current user
+        if (user?.id) {
+          const requestsMap = {}
+          await Promise.all(
+            data.filter(group => group.created_by === user.id).map(async (group) => {
+              try {
+                const requests = await getGroupJoinRequests(group.id)
+                requestsMap[group.id] = requests
+              } catch (error) {
+                console.error(`Error loading requests for group ${group.id}:`, error)
+                requestsMap[group.id] = []
+              }
+            })
+          )
+          setJoinRequests(requestsMap)
+        }
       } catch (err) {
         setError(err)
       } finally {
@@ -93,8 +113,69 @@ const GroupList = () => {
       }
     }
 
-    fetchGroups()
-  }, [projectId])
+    if (user?.id) {
+      fetchGroups()
+    }
+  }, [projectId, user?.id])
+
+  // Handle join group request
+  const handleJoinGroup = async (groupId) => {
+    if (!user?.id) return
+    
+    try {
+      setActionLoading(prev => ({ ...prev, [groupId]: true }))
+      await sendJoinRequest(groupId, user.id)
+      
+      // Update the group's user_has_requested status
+      setGroups(prev => prev.map(group => 
+        group.id === groupId 
+          ? { ...group, user_has_requested: true, can_join: false }
+          : group
+      ))
+      
+      alert('Join request sent successfully!')
+    } catch (error) {
+      console.error('Error sending join request:', error)
+      alert('Failed to send join request. You may have already requested to join this group.')
+    } finally {
+      setActionLoading(prev => ({ ...prev, [groupId]: false }))
+    }
+  }
+
+  // Handle approve/reject join request
+  const handleRespondToRequest = async (userId, action, groupId) => {
+    if (!user?.id) return
+    
+    const loadingKey = `${groupId}-${userId}`
+    
+    try {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: true }))
+      
+      if (action === 'approved') {
+        await approveJoinRequest(groupId, userId)
+      } else {
+        await rejectJoinRequest(groupId, userId)
+      }
+      
+      // Refresh join requests for this group
+      const updatedRequests = await getGroupJoinRequests(groupId)
+      setJoinRequests(prev => ({
+        ...prev,
+        [groupId]: updatedRequests
+      }))
+      
+      // Refresh groups data to update counts
+      const updatedGroups = await getGroupsWithDetails(projectId || null, user.id)
+      setGroups(updatedGroups)
+      
+      alert(`Request ${action} successfully!`)
+    } catch (error) {
+      console.error('Error responding to request:', error)
+      alert('Failed to respond to request. Please try again.')
+    } finally {
+      setActionLoading(prev => ({ ...prev, [loadingKey]: false }))
+    }
+  }
 
   const handleBackToProjects = () => {
     navigate('/project-ideas')
@@ -131,7 +212,7 @@ const GroupList = () => {
           )}
         </div>
         <div className="flex gap-3">
-          {!userLoading && isStudent() && (
+          {!userLoading && isStudent(userProfile) && (
             <Button 
               onClick={() => navigate(`/create-group${projectId ? `?projectId=${projectId}&projectTitle=${encodeURIComponent(projectTitle || '')}` : ''}`)}
               className="bg-green-600 hover:bg-green-700"
@@ -190,9 +271,16 @@ const GroupList = () => {
               {groups.map((group) => (
                 <Card key={group.id} className="h-full hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle className="text-xl text-blue-600">
-                      {group.name}
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl text-blue-600">
+                        {group.name}
+                      </CardTitle>
+                      {group.is_creator && group.pending_requests_count > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {group.pending_requests_count} pending
+                        </Badge>
+                      )}
+                    </div>
                     {group.beginner_project_ideas && (
                       <CardDescription className="text-sm font-medium text-gray-700">
                         Project: {group.beginner_project_ideas.title}
@@ -204,6 +292,33 @@ const GroupList = () => {
                       <h4 className="font-semibold text-gray-800 mb-2">Group Introduction:</h4>
                       <p className="text-gray-700">
                         {group.introduction || 'No introduction provided.'}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-1">Members:</h4>
+                      <p className="text-sm text-gray-600">
+                        {(() => {
+                          let members = group.members || []
+                          // Handle case where members might be stored as string instead of array
+                          if (typeof members === 'string') {
+                            try {
+                              members = JSON.parse(members)
+                            } catch (e) {
+                              members = []
+                            }
+                          }
+                          return Array.isArray(members) ? members.length : 0
+                        })()} member(s)
+                        {group.is_creator && ' (You are the creator)'}
+                        {group.is_member && !group.is_creator && ' (You are a member)'}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-1">Created by:</h4>
+                      <p className="text-sm text-gray-600">
+                        {group.creator_email || 'Unknown'}
                       </p>
                     </div>
                     
@@ -221,11 +336,99 @@ const GroupList = () => {
                       </div>
                     )}
                     
-                    {!userLoading && isStudent() && (
+                    {/* Join Requests for Group Creators */}
+                    {group.is_creator && joinRequests[group.id] && joinRequests[group.id].length > 0 && (
+                      <div className="border-t pt-3">
+                        <h4 className="font-semibold text-gray-800 mb-2">Pending Join Requests:</h4>
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                          {joinRequests[group.id].map((profile) => (
+                            <div key={profile.id} className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-semibold text-gray-900">
+                                      {profile.username || profile.email || 'Unknown User'}
+                                    </p>
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                      {profile.role || 'Student'}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="text-sm text-gray-600 mb-2">
+                                    <p><span className="font-medium">Email:</span> {profile.email}</p>
+                                    <p><span className="font-medium">User ID:</span> {profile.id}</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex flex-col gap-2 ml-3">
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => handleRespondToRequest(profile.id, 'approved', group.id)}
+                                    className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700"
+                                    disabled={actionLoading[`${group.id}-${profile.id}`]}
+                                  >
+                                    {actionLoading[`${group.id}-${profile.id}`] ? 'Processing...' : 'Accept'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRespondToRequest(profile.id, 'rejected', group.id)}
+                                    className="text-xs px-3 py-1 border-red-300 text-red-600 hover:bg-red-50"
+                                    disabled={actionLoading[`${group.id}-${profile.id}`]}
+                                  >
+                                    {actionLoading[`${group.id}-${profile.id}`] ? 'Processing...' : 'Reject'}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* View Details Button for Members */}
+                    {!userLoading && (group.is_member || group.is_creator) && (
                       <div className="pt-3">
-                        <Button className="w-full" size="sm">
-                          Join Group
+                        <Button 
+                          className="w-full" 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => navigate(`/groups/${group.id}`)}
+                        >
+                          View Group Details
                         </Button>
+                      </div>
+                    )}
+                    
+                    {/* Join Button for Non-creators */}
+                    {!userLoading && isStudent(userProfile) && !group.is_creator && !group.is_member && (
+                      <div className="pt-3">
+                        {group.user_request_status === 'pending' ? (
+                          <Button className="w-full" size="sm" disabled>
+                            Request Pending
+                          </Button>
+                        ) : group.user_request_status === 'rejected' ? (
+                          <Button className="w-full" size="sm" disabled variant="outline">
+                            Request Rejected
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full" 
+                            size="sm"
+                            onClick={() => handleJoinGroup(group.id)}
+                            disabled={actionLoading[group.id]}
+                          >
+                            {actionLoading[group.id] ? (
+                              <>
+                                <BeatLoader size={4} color="white" className="mr-2" />
+                                Sending...
+                              </>
+                            ) : (
+                              'Join Group'
+                            )}
+                          </Button>
+                        )}
                       </div>
                     )}
                   </CardContent>

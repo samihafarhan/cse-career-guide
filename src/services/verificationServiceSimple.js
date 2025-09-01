@@ -227,6 +227,92 @@ export const rejectVerificationSimple = async (userId) => {
   }
 }
 
+/**
+ * Fix common RLS and profile issues
+ * @param {string} userId 
+ * @param {string} email 
+ * @returns {Promise<Object>} Fix results
+ */
+export const fixUserProfileIssues = async (userId, email) => {
+  const results = {
+    success: false,
+    profile_created: false,
+    profile_updated: false,
+    errors: []
+  }
+
+  try {
+    // First, try to get current user to ensure we have auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      results.errors.push('User not authenticated')
+      return results
+    }
+
+    if (user.id !== userId) {
+      results.errors.push('User ID mismatch')
+      return results
+    }
+
+    // Check if profile exists
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      results.errors.push(`Error checking profile: ${fetchError.message}`)
+      return results
+    }
+
+    if (!existingProfile) {
+      // Profile doesn't exist, try to create it
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          role: 'unverified'
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        results.errors.push(`Error creating profile: ${createError.message}`)
+        return results
+      } else {
+        results.profile_created = true
+        results.success = true
+      }
+    } else {
+      // Profile exists, try to update it
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          email: email,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (updateError) {
+        results.errors.push(`Error updating profile: ${updateError.message}`)
+        return results
+      } else {
+        results.profile_updated = true
+        results.success = true
+      }
+    }
+
+  } catch (error) {
+    results.errors.push(`General error: ${error.message}`)
+  }
+
+  return results
+}
+
 // Export the enhanced methods for backward compatibility
 export const uploadVerificationDocumentWithFallback = uploadVerificationDocumentSimple
 export const updateVerificationStatus = updateVerificationStatusSimple

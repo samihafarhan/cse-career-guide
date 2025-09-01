@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Landing from './pages/landing.jsx'
 import Auth from './pages/auth.jsx'
 import Dash from './pages/dash.jsx'
+import DashAlt from './pages/dashAlt.jsx'
 import MyProfile from './pages/myprofile.jsx'
 import ProjectIdeas from './pages/projectideas.jsx'
 import SubmitIdea from './pages/submitidea.jsx'
 import GroupList from './pages/grouplist.jsx'
 import CreateGroup from './pages/creategroup.jsx'
+import GroupDetails from './pages/groupdetails.jsx'
 import NewsPage from './pages/newspage.jsx'
 import InterviewQuestions from './pages/interviewquestions.jsx'
 import SubmitInterviewQuestion from './pages/submitinterviewquestion.jsx'
@@ -22,6 +25,7 @@ import CareerResult from "./pages/careerresult.jsx"
 import SeePath from "./pages/seepath.jsx"
 import DashboardAdminSimple from "./pages/dashboardAdminSimple.jsx"
 import Verification from "./pages/verification.jsx"
+import { initAutoUpgrade } from './services/autoUpgradeService.js'
 import './App.css'
 import AdminDash from "./pages/admindash.jsx"
 import AdminAnalysis from "./pages/adminanalysis.jsx" 
@@ -39,10 +43,12 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dash />} />
+        <Route path="/dashboard-alt" element={<DashAlt />} />
         <Route path="/profile" element={<MyProfile />} />
         <Route path="/project-ideas" element={<ProjectIdeas />} />
         <Route path="/submit-idea" element={<SubmitIdea />} />
         <Route path="/groups" element={<GroupList />} />
+        <Route path="/groups/:groupId" element={<GroupDetails />} />
         <Route path="/create-group" element={<CreateGroup />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/interview-questions" element={<InterviewQuestions />} />
@@ -65,6 +71,11 @@ function AppContent() {
 }
 
 function App() {
+  // Initialize automatic role upgrade service when app starts
+  useEffect(() => {
+    initAutoUpgrade()
+  }, [])
+
   return (
     <div className="App">
       <ChatProvider>

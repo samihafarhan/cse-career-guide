@@ -43,6 +43,7 @@ const MyProfile = () => {
     const navigate = useNavigate()
     const [isCheckingUsername, setIsCheckingUsername] = useState(false)
     const [usernameAvailable, setUsernameAvailable] = useState(null)
+    const [roleUpdateMessage, setRoleUpdateMessage] = useState(null)
     
     const { user } = useAuthCheck()
 
@@ -89,15 +90,6 @@ const MyProfile = () => {
         return () => clearTimeout(timeoutId)
     }, [usernameUpdate.newValue, userProfile?.username, user?.id])
 
-    // Custom username update handler with availability check
-    const handleUsernameUpdate = async () => {
-        if (usernameAvailable === false) {
-            usernameUpdate.setError('This username is already taken. Please choose a different one.')
-            return
-        }
-        await usernameUpdate.handleUpdate(user.id, usernameUpdate.newValue, 'Username')
-    }
-
     if (loading) {
         return <LoadingSpinner fullScreen message="Loading profile..." />
     }
@@ -115,6 +107,34 @@ const MyProfile = () => {
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold mb-8 text-center">My Profile</h1>
+                    
+                    {/* Role Update Notification */}
+                    {roleUpdateMessage && (
+                        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <div className="w-5 h-5 text-green-400">
+                                        ✓
+                                    </div>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-green-800">
+                                        {roleUpdateMessage}
+                                    </p>
+                                </div>
+                                <div className="ml-auto pl-3">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setRoleUpdateMessage(null)}
+                                        className="text-green-600 hover:text-green-800"
+                                    >
+                                        ✕
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     
                     {/* User Authentication Info */}
                     <Card className="mb-6">
@@ -161,7 +181,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Username</Label>
                                         <p className="text-lg">{userProfile?.username || 'Not available'}</p>
                                         
-                                        <Dialog open={usernameUpdate.isDialogOpen} onOpenChange={usernameUpdate.isDialogOpen ? usernameUpdate.closeDialog : () => usernameUpdate.openDialog(userProfile?.username)}>
+                                        <Dialog open={usernameUpdate.isDialogOpen} onOpenChange={(open) => open ? usernameUpdate.openDialog(userProfile?.username) : usernameUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
@@ -226,8 +246,19 @@ const MyProfile = () => {
                                                         Cancel
                                                     </Button>
                                                     <Button
-                                                        onClick={handleUsernameUpdate}
-                                                        disabled={usernameUpdate.isUpdating || !usernameUpdate.newValue.trim() || usernameAvailable === false}
+                                                        onClick={() => {
+                                                            const trimmedUsername = usernameUpdate.newValue.trim()
+                                                            if (!trimmedUsername) {
+                                                                usernameUpdate.setError('Username cannot be empty')
+                                                                return
+                                                            }
+                                                            if (usernameAvailable === false) {
+                                                                usernameUpdate.setError('This username is already taken. Please choose a different one.')
+                                                                return
+                                                            }
+                                                            usernameUpdate.handleUpdate(user.id, trimmedUsername, 'Username')
+                                                        }}
+                                                        disabled={usernameUpdate.isUpdating || !usernameUpdate.newValue?.trim()}
                                                     >
                                                         {usernameUpdate.isUpdating ? (
                                                             <>
@@ -254,7 +285,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Graduation Year</Label>
                                         <p className="text-lg">{userProfile?.grad_year || 'Not available'}</p>
                                         
-                                        <Dialog open={gradYearUpdate.isDialogOpen} onOpenChange={gradYearUpdate.isDialogOpen ? gradYearUpdate.closeDialog : () => gradYearUpdate.openDialog(userProfile?.grad_year)}>
+                                        <Dialog open={gradYearUpdate.isDialogOpen} onOpenChange={(open) => open ? gradYearUpdate.openDialog(userProfile?.grad_year) : gradYearUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
@@ -331,7 +362,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Organization</Label>
                                         <p className="text-lg">{userProfile?.organization || 'Not available'}</p>
                                         
-                                        <Dialog open={organizationUpdate.isDialogOpen} onOpenChange={organizationUpdate.isDialogOpen ? organizationUpdate.closeDialog : () => organizationUpdate.openDialog(userProfile?.organization)}>
+                                        <Dialog open={organizationUpdate.isDialogOpen} onOpenChange={(open) => open ? organizationUpdate.openDialog(userProfile?.organization) : organizationUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
@@ -409,6 +440,17 @@ const MyProfile = () => {
                                         >
                                             Verify Role
                                         </Button>
+                                        
+                                        {userProfile?.role?.toLowerCase() === 'student' && userProfile?.grad_year && (
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Graduation Year: {userProfile.grad_year} | Current Year: {new Date().getFullYear()}
+                                                {userProfile.grad_year < new Date().getFullYear() && (
+                                                    <span className="text-orange-600 ml-2">
+                                                        • Will auto-upgrade to Alumni
+                                                    </span>
+                                                )}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Avatar URL Section */}
@@ -416,7 +458,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Avatar URL</Label>
                                         <p className="text-sm break-all">{userProfile?.avatar_url || 'Not available'}</p>
                                         
-                                        <Dialog open={avatarUrlUpdate.isDialogOpen} onOpenChange={avatarUrlUpdate.isDialogOpen ? avatarUrlUpdate.closeDialog : () => avatarUrlUpdate.openDialog(userProfile?.avatar_url)}>
+                                        <Dialog open={avatarUrlUpdate.isDialogOpen} onOpenChange={(open) => open ? avatarUrlUpdate.openDialog(userProfile?.avatar_url) : avatarUrlUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
@@ -486,7 +528,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Bio</Label>
                                         <p className="text-lg">{userProfile?.bio || 'Not available'}</p>
                                         
-                                        <Dialog open={bioUpdate.isDialogOpen} onOpenChange={bioUpdate.isDialogOpen ? bioUpdate.closeDialog : () => bioUpdate.openDialog(userProfile?.bio)}>
+                                        <Dialog open={bioUpdate.isDialogOpen} onOpenChange={(open) => open ? bioUpdate.openDialog(userProfile?.bio) : bioUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
@@ -556,7 +598,7 @@ const MyProfile = () => {
                                         <Label className="text-gray-500">Skills</Label>
                                         <p className="text-lg">{userProfile?.skills || 'Not available'}</p>
                                         
-                                        <Dialog open={skillsUpdate.isDialogOpen} onOpenChange={skillsUpdate.isDialogOpen ? skillsUpdate.closeDialog : () => skillsUpdate.openDialog(userProfile?.skills)}>
+                                        <Dialog open={skillsUpdate.isDialogOpen} onOpenChange={(open) => open ? skillsUpdate.openDialog(userProfile?.skills) : skillsUpdate.closeDialog()}>
                                             <DialogTrigger asChild>
                                                 <Button 
                                                     variant="outline" 
