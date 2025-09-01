@@ -33,7 +33,7 @@ export const useProfileUpdate = (updateFunction, onSuccess = () => {}) => {
   }
 
   const openDialog = (currentValue = '') => {
-    setNewValue(currentValue)
+    setNewValue(currentValue || '')
     setError(null)
     setIsDialogOpen(true)
   }

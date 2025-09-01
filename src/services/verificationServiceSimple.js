@@ -90,7 +90,7 @@ export const updateVerificationStatusSimple = async (userId, uploadResult) => {
       
       result = data[0]
     } else {
-      // Profile doesn't exist, create it
+      // Profile doesn't exist, try to create it (with error handling for race conditions)
       const createData = {
         id: userId,
         email: user.email,
@@ -104,10 +104,29 @@ export const updateVerificationStatusSimple = async (userId, uploadResult) => {
         .select()
 
       if (error) {
-        throw new Error(`Failed to create profile: ${error.message}`)
+        // If insert fails due to duplicate key (race condition), try to update instead
+        if (error.code === '23505' || error.message.includes('duplicate key')) {
+          console.log('Profile created by another process, updating instead...')
+          const { data: updateData, error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              verification_status: 'pending_review',
+              document_path: documentPath
+            })
+            .eq('id', userId)
+            .select()
+
+          if (updateError) {
+            throw new Error(`Failed to update existing profile: ${updateError.message}`)
+          }
+          
+          result = updateData[0]
+        } else {
+          throw new Error(`Failed to create profile: ${error.message}`)
+        }
+      } else {
+        result = data[0]
       }
-      
-      result = data[0]
     }
 
     return result
@@ -225,6 +244,92 @@ export const rejectVerificationSimple = async (userId) => {
   } catch (error) {
     throw new Error(`Failed to reject verification: ${error.message}`)
   }
+}
+
+/**
+ * Fix common RLS and profile issues
+ * @param {string} userId 
+ * @param {string} email 
+ * @returns {Promise<Object>} Fix results
+ */
+export const fixUserProfileIssues = async (userId, email) => {
+  const results = {
+    success: false,
+    profile_created: false,
+    profile_updated: false,
+    errors: []
+  }
+
+  try {
+    // First, try to get current user to ensure we have auth
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      results.errors.push('User not authenticated')
+      return results
+    }
+
+    if (user.id !== userId) {
+      results.errors.push('User ID mismatch')
+      return results
+    }
+
+    // Check if profile exists
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      results.errors.push(`Error checking profile: ${fetchError.message}`)
+      return results
+    }
+
+    if (!existingProfile) {
+      // Profile doesn't exist, try to create it
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          role: 'unverified'
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        results.errors.push(`Error creating profile: ${createError.message}`)
+        return results
+      } else {
+        results.profile_created = true
+        results.success = true
+      }
+    } else {
+      // Profile exists, try to update it
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          email: email,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+      if (updateError) {
+        results.errors.push(`Error updating profile: ${updateError.message}`)
+        return results
+      } else {
+        results.profile_updated = true
+        results.success = true
+      }
+    }
+
+  } catch (error) {
+    results.errors.push(`General error: ${error.message}`)
+  }
+
+  return results
 }
 
 // Export the enhanced methods for backward compatibility

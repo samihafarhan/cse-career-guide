@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BeatLoader } from 'react-spinners'
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react'
-import { uploadVerificationDocumentWithFallback, updateVerificationStatus } from '../services/verificationServiceSimple'
+import { uploadVerificationDocumentWithFallback, updateVerificationStatus, fixUserProfileIssues } from '../services/verificationServiceSimple'
 import { getUserProfile, getOrCreateUserProfile } from '../services/profileService'
 import { useAuthCheck } from '@/context'
 import AuthWrapper from '@/components/AuthWrapper'
@@ -86,14 +86,10 @@ const Verification = () => {
       setErrors({}) // Clear previous errors
       
       // Upload document using enhanced method with fallback
-      console.log('Starting document upload...')
       const uploadResult = await uploadVerificationDocumentWithFallback(selectedFile, user.id)
-      console.log('Upload result:', uploadResult)
       
       // Update user profile with verification status
-      console.log('Updating verification status...')
       const profileResult = await updateVerificationStatus(user.id, uploadResult)
-      console.log('Profile update result:', profileResult)
       
       setSubmitSuccess(true)
       
@@ -106,7 +102,12 @@ const Verification = () => {
       console.error('Submission error:', error)
       
       // Handle specific error types
-      if (error.message.includes('row-level security policy')) {
+      if (error.message.includes('duplicate key') || error.message.includes('already exists')) {
+        // This usually means profile was created by another process - try refreshing
+        setErrors({ 
+          submit: 'Profile sync issue detected. Please refresh the page and try again.' 
+        })
+      } else if (error.message.includes('row-level security policy')) {
         setErrors({ 
           submit: 'Permission denied. The upload was successful but profile update failed due to database permissions. Please check the browser console for details and contact support.' 
         })

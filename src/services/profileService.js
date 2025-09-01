@@ -101,12 +101,25 @@ export const updateBio = async (userId, bio) => {
 
 /**
  * Update user's graduation year in the profiles table
+ * Automatically updates role from student to alumni if graduation year < current year
  * @param {string} userId 
  * @param {number} gradYear 
  * @returns {Promise<Object>} 
  */
 export const updateGradYear = async (userId, gradYear) => {
-  return updateProfileField(userId, { grad_year: gradYear })
+  const currentYear = new Date().getFullYear()
+  
+  // Get current user profile to check existing role
+  const currentProfile = await getUserProfile(userId)
+  
+  const updates = { grad_year: gradYear }
+  
+  // Auto-update role from student to alumni if graduation year is before current year
+  if (currentProfile?.role?.toLowerCase() === 'student' && gradYear < currentYear) {
+    updates.role = 'alumni'
+  }
+  
+  return updateProfileField(userId, updates)
 }
 
 /**
@@ -169,6 +182,37 @@ export const createUserProfile = async (userId, email) => {
 }
 
 /**
+ * Simple function to upgrade a student to alumni based on graduation year
+ * @param {string} userId 
+ * @returns {Promise<Object|null>} Updated profile if upgraded, null if no change needed
+ */
+export const upgradeStudentToAlumni = async (userId) => {
+  try {
+    const profile = await getUserProfile(userId)
+    
+    if (!profile) {
+      return null
+    }
+    
+    const currentYear = new Date().getFullYear()
+    
+    // Only upgrade if user is currently a student and has graduated
+    if (profile.role?.toLowerCase() === 'student' && 
+        profile.grad_year && 
+        profile.grad_year <= currentYear) {
+      
+      const updatedProfile = await updateRole(userId, 'alumni')
+      return { ...updatedProfile, wasUpgraded: true }
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Error upgrading student to alumni:', error)
+    return null
+  }
+}
+
+/**
  * Get or create user profile (ensures profile exists)
  * @param {string} userId 
  * @param {string} email 
@@ -187,5 +231,79 @@ export const getOrCreateUserProfile = async (userId, email) => {
     return profile
   } catch (error) {
     throw new Error(`Failed to get or create user profile: ${error.message}`)
+  }
+}
+
+/**
+ * Batch update all students to alumni if their graduation year <= current year
+ * This function can be called periodically to auto-graduate students
+ * @returns {Promise<Array>} Array of updated profiles
+ */
+export const updateStudentsToAlumni = async () => {
+  try {
+    const currentYear = new Date().getFullYear()
+    
+    // Get all students with graduation year <= current year
+    const { data: studentsToUpdate, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('role', 'student')
+      .lte('grad_year', currentYear)
+      .not('grad_year', 'is', null)
+    
+    if (fetchError) {
+      throw new Error(fetchError.message)
+    }
+    
+    if (!studentsToUpdate || studentsToUpdate.length === 0) {
+      return []
+    }
+    
+    // Update all qualifying students to alumni
+    const { data: updatedProfiles, error: updateError } = await supabase
+      .from('profiles')
+      .update({ role: 'alumni' })
+      .eq('role', 'student')
+      .lte('grad_year', currentYear)
+      .not('grad_year', 'is', null)
+      .select()
+    
+    if (updateError) {
+      throw new Error(updateError.message)
+    }
+    
+    return updatedProfiles || []
+  } catch (error) {
+    throw new Error(`Failed to batch update students to alumni: ${error.message}`)
+  }
+}
+
+/**
+ * Check and update a single user's role based on graduation year
+ * @param {string} userId 
+ * @returns {Promise<Object|null>} Updated profile if changed, null if no update needed
+ */
+export const checkAndUpdateUserRole = async (userId) => {
+  try {
+    const profile = await getUserProfile(userId)
+    
+    if (!profile) {
+      return null
+    }
+    
+    const currentYear = new Date().getFullYear()
+    
+    // Only update if user is currently a student and has graduated
+    if (profile.role?.toLowerCase() === 'student' && 
+        profile.grad_year && 
+        profile.grad_year <= currentYear) {
+      
+      const updatedProfile = await updateRole(userId, 'alumni')
+      return updatedProfile
+    }
+    
+    return null
+  } catch (error) {
+    throw new Error(`Failed to check and update user role: ${error.message}`)
   }
 }

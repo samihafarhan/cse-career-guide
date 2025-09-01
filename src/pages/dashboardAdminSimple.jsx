@@ -13,11 +13,10 @@ import {
   approveVerificationSimple as approveVerification,
   rejectVerificationSimple as rejectVerification
 } from '../services/verificationServiceSimple'
+import { autoUpgradeStudentsToAlumni } from '../services/autoUpgradeService'
 
 const DashboardAdmin = () => {
-  console.log('DashboardAdmin component loading...')
   const { user, isAuthenticated, loading: authLoading } = useAuthCheck()
-  console.log('Auth state:', { user, isAuthenticated, authLoading })
   
   // State for verification data
   const [pendingUsers, setPendingUsers] = useState([])
@@ -25,14 +24,16 @@ const DashboardAdmin = () => {
   const [error, setError] = useState(null)
   const [processingUser, setProcessingUser] = useState(null)
   const [selectedRole, setSelectedRole] = useState('')
+  
+  // State for role update functionality
+  const [roleUpdateLoading, setRoleUpdateLoading] = useState(false)
+  const [roleUpdateResult, setRoleUpdateResult] = useState(null)
 
   // Fetch pending verifications
   const fetchPendingVerifications = async () => {
     try {
-      console.log('Fetching pending verifications...')
       setLoading(true)
       const users = await getPendingVerifications()
-      console.log('Fetched users:', users)
       setPendingUsers(users)
     } catch (error) {
       console.error('Error fetching pending verifications:', error)
@@ -51,9 +52,6 @@ const DashboardAdmin = () => {
   // Handle viewing document
   const handleViewDocument = async (user) => {
     try {
-      console.log('Viewing document for user:', user)
-      console.log('Document path:', user.document_path)
-      
       if (!user.document_path) {
         alert('No document found for this user')
         return
@@ -61,7 +59,6 @@ const DashboardAdmin = () => {
       
       // Get document URL
       const documentUrl = await getDocumentUrlSimple(user.document_path, user)
-      console.log('Generated document URL:', documentUrl)
       
       // Check if it's a base64 data URL
       if (documentUrl.startsWith('data:')) {
@@ -105,7 +102,6 @@ const DashboardAdmin = () => {
     }
 
     try {
-      console.log('Rejecting user:', userId)
       await rejectVerification(userId)
       
       // Remove user from pending list
@@ -130,7 +126,6 @@ const DashboardAdmin = () => {
     }
 
     try {
-      console.log('Approving user:', userId, 'as', role)
       setProcessingUser(userId)
       await approveVerification(userId, role)
       
@@ -144,6 +139,40 @@ const DashboardAdmin = () => {
       alert('Failed to approve user: ' + error.message)
     } finally {
       setProcessingUser(null)
+    }
+  }
+
+  // Handle batch role update from student to alumni - Simple auto version
+  const handleBatchRoleUpdate = async () => {
+    if (!confirm('This will automatically upgrade all students who have graduated (graduation year < current year) to alumni status. Continue?')) {
+      return
+    }
+
+    try {
+      setRoleUpdateLoading(true)
+      setRoleUpdateResult(null)
+      
+      const result = await autoUpgradeStudentsToAlumni()
+      setRoleUpdateResult(result)
+      
+      if (result.success) {
+        alert(`Successfully auto-upgraded ${result.upgradedCount} students to alumni status!`)
+      } else {
+        alert(`Auto-upgrade failed: ${result.error || result.message}`)
+      }
+      
+    } catch (error) {
+      console.error('Error running auto-upgrade:', error)
+      const errorResult = {
+        success: false,
+        message: `Failed to auto-upgrade student roles: ${error.message}`,
+        upgradedCount: 0,
+        updatedProfiles: []
+      }
+      setRoleUpdateResult(errorResult)
+      alert('Failed to run auto-upgrade: ' + error.message)
+    } finally {
+      setRoleUpdateLoading(false)
     }
   }
 

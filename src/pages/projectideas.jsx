@@ -11,6 +11,7 @@ import { BeatLoader, BarLoader } from 'react-spinners'
 import Error from '../components/error'
 import useFetch from '../hooks/use-fetch'
 import { getAllProjectIdeas, getUserProfile } from '../services/projectideas_services'
+import { isStudent, isProfessor } from '@/utils/roleUtils'
 import { useAuthCheck } from '@/context'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -45,16 +46,6 @@ const ProjectIdeas = () => {
   // Function to handle "Look for Groups" button click
   const handleLookForGroups = (projectId, projectTitle) => {
     navigate(`/groups?projectId=${projectId}&projectTitle=${encodeURIComponent(projectTitle)}`)
-  }
-
-  // Check if user is a professor (based on role field)
-  const isProfessor = () => {
-    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'professor'
-  }
-
-  // Check if user is a student (based on role field)
-  const isStudent = () => {
-    return userProfile && userProfile.role && userProfile.role.toLowerCase() === 'student'
   }
 
   // Handle submit idea button click
@@ -106,7 +97,7 @@ const ProjectIdeas = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Project Ideas</h1>
-        {!userLoading && isProfessor() && (
+        {!userLoading && isProfessor(userProfile) && (
           <Button 
             onClick={handleSubmitIdea}
             className="bg-blue-600 hover:bg-blue-700"
@@ -154,7 +145,7 @@ const ProjectIdeas = () => {
                     <p className="text-gray-700">
                       {idea.description || 'No description provided.'}
                     </p>
-                    {!userLoading && isStudent() && (
+                    {!userLoading && isStudent(userProfile) && (
                       <Button 
                         onClick={() => handleLookForGroups(idea.id, idea.title)}
                         className="w-full"
