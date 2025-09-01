@@ -102,7 +102,12 @@ const Verification = () => {
       console.error('Submission error:', error)
       
       // Handle specific error types
-      if (error.message.includes('row-level security policy')) {
+      if (error.message.includes('duplicate key') || error.message.includes('already exists')) {
+        // This usually means profile was created by another process - try refreshing
+        setErrors({ 
+          submit: 'Profile sync issue detected. Please refresh the page and try again.' 
+        })
+      } else if (error.message.includes('row-level security policy')) {
         setErrors({ 
           submit: 'Permission denied. The upload was successful but profile update failed due to database permissions. Please check the browser console for details and contact support.' 
         })

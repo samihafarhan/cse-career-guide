@@ -90,7 +90,7 @@ export const updateVerificationStatusSimple = async (userId, uploadResult) => {
       
       result = data[0]
     } else {
-      // Profile doesn't exist, create it
+      // Profile doesn't exist, try to create it (with error handling for race conditions)
       const createData = {
         id: userId,
         email: user.email,
@@ -104,10 +104,29 @@ export const updateVerificationStatusSimple = async (userId, uploadResult) => {
         .select()
 
       if (error) {
-        throw new Error(`Failed to create profile: ${error.message}`)
+        // If insert fails due to duplicate key (race condition), try to update instead
+        if (error.code === '23505' || error.message.includes('duplicate key')) {
+          console.log('Profile created by another process, updating instead...')
+          const { data: updateData, error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              verification_status: 'pending_review',
+              document_path: documentPath
+            })
+            .eq('id', userId)
+            .select()
+
+          if (updateError) {
+            throw new Error(`Failed to update existing profile: ${updateError.message}`)
+          }
+          
+          result = updateData[0]
+        } else {
+          throw new Error(`Failed to create profile: ${error.message}`)
+        }
+      } else {
+        result = data[0]
       }
-      
-      result = data[0]
     }
 
     return result
