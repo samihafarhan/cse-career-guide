@@ -333,7 +333,7 @@ const MyProfile = () => {
                                                     <Button
                                                         onClick={() => {
                                                             const year = parseInt(gradYearUpdate.newValue)
-                                                            if (isNaN(year) || year < 1900 || year > 2100) {
+                                                            if (isNaN(year) || year < 1980 || year > 2100) {
                                                                 gradYearUpdate.setError('Please enter a valid graduation year')
                                                                 return
                                                             }

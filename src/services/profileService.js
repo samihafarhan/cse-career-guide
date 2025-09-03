@@ -143,16 +143,6 @@ export const updateRole = async (userId, role) => {
 }
 
 /**
- * Update user's avatar URL in the profiles table
- * @param {string} userId 
- * @param {string} avatarUrl 
- * @returns {Promise<Object>} 
- */
-export const updateAvatarUrl = async (userId, avatarUrl) => {
-  return updateProfileField(userId, { avatar_url: avatarUrl })
-}
-
-/**
  * Create a new user profile
  * @param {string} userId 
  * @param {string} email 
