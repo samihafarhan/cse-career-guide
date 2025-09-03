@@ -1,16 +1,11 @@
-// services/careerPathservice.js - Direct Gemini Implementation
+
 import GeminiService from './geminiService'
 import { createApiErrorHandler } from '../utils/errorHandler'
+import supabase from '../db/supabase' 
 
-// In-memory storage for this session
-let careerPathStorage = {}
-
-// Create error handler
 const handleError = createApiErrorHandler('CareerPathService')
 
-/**
- * Generate career suggestion using Gemini AI
- */
+
 const generateCareerSuggestion = async (field, desiredSkills, confidentSkills) => {
   try {
     const prompt = `As a career advisor for Computer Science and Engineering students, provide a personalized career guidance based on the following information:
@@ -35,86 +30,136 @@ Keep the response concise but comprehensive, around 100-150 words.`
 }
 
 /**
- * Create a new career path entry (Direct Gemini, no database)
  */
 export const createCareerPath = async (careerData) => {
   try {
     console.log('Generating career path with Gemini...')
     
-    // Generate AI suggestion directly
+
     const aiSuggestion = await generateCareerSuggestion(
       careerData.field,
       careerData.desired_skills,
       careerData.confident_skills
     )
 
-    // Create result object
-    const result = {
-      id: careerData.user_id,
-      user_id: careerData.user_id,
-      field: careerData.field,
-      desired_skills: careerData.desired_skills,
-      confident_skills: careerData.confident_skills,
-      suggestion: aiSuggestion,
-      created_at: new Date().toISOString()
-    }
 
-    // Store in memory
-    careerPathStorage[careerData.user_id] = result
+    const { data, error } = await supabase
+      .from('career_path')
+      .insert([
+        {
+          user_id: careerData.user_id,
+          field: careerData.field,
+          desired_skills: careerData.desired_skills,
+          confident_skills: careerData.confident_skills,
+          suggestion: aiSuggestion
+        }
+      ])
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
     
-    console.log('Career path generated successfully:', result)
-    return result
+    console.log('Career path saved to database:', data)
+    return data
 
   } catch (error) {
+    console.error('Database error:', error)
     handleError(error, 'Failed to create career path')
   }
 }
 
-/**
- * Get career path data for a specific user
- */
-export const getCareerPath = async (userId) => {
+
+export const getCareerPath = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("Career path ID is required")
+    }
+
+    const { data, error } = await supabase
+      .from('career_path')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    if (!data) {
+      throw new Error("No career path found with this ID")
+    }
+
+    return data
+
+  } catch (error) {
+    console.error('Database error:', error)
+    handleError(error, 'Failed to fetch career path')
+  }
+}
+
+
+export const getAllCareerPaths = async (userId) => {
   try {
     if (!userId) {
       throw new Error("User ID is required")
     }
 
-    // Get from memory
-    const data = careerPathStorage[userId]
-    if (data) {
-      return data
+    const { data, error } = await supabase
+      .from('career_path')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw error
     }
 
-    throw new Error("No career path found for this user")
+    return data || []
 
   } catch (error) {
-    handleError(error, 'Failed to fetch career path')
+    console.error('Database error:', error)
+    handleError(error, 'Failed to fetch career paths')
   }
 }
 
-/**
- * Update an existing career path entry
- */
-export const updateCareerPath = async (userId, updateData) => {
+
+export const updateCareerPath = async (id, updateData) => {
   try {
-    const existing = await getCareerPath(userId)
-    const updated = { ...existing, ...updateData, updated_at: new Date().toISOString() }
-    
-    careerPathStorage[userId] = updated
-    return updated
+    const { data, error } = await supabase
+      .from('career_path')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return data
   } catch (error) {
+    console.error('Database error:', error)
     handleError(error, 'Failed to update career path')
   }
 }
 
-/**
- * Delete a career path entry
- */
-export const deleteCareerPath = async (userId) => {
+
+export const deleteCareerPath = async (id) => {
   try {
-    delete careerPathStorage[userId]
+    const { error } = await supabase
+      .from('career_path')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      throw error
+    }
+
     return { message: "Career path deleted successfully" }
   } catch (error) {
+    console.error('Database error:', error)
     handleError(error, 'Failed to delete career path')
   }
 }
@@ -122,6 +167,7 @@ export const deleteCareerPath = async (userId) => {
 export default {
   createCareerPath,
   getCareerPath,
+  getAllCareerPaths,
   updateCareerPath,
   deleteCareerPath,
 }

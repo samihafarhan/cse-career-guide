@@ -31,24 +31,43 @@ class AdminAnalyticsService {
     }
   }
 
-  // Get new members joined (last 30 days)
+  // Get new members joined (last 30 days) from auth.users
   async getNewMembersInfo() {
     try {
-      console.log('Fetching new members info...');
+      console.log('Fetching new members info from auth users...');
       
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
       
+      console.log('Date 30 days ago:', thirtyDaysAgoISO);
+      
+      // Query auth.users table directly for admin access
       const { count: newMembers, error } = await supabase
-        .from('profiles')
+        .from('auth.users')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo.toISOString());
+        .gte('created_at', thirtyDaysAgoISO);
 
       if (error) {
-        console.error('Error fetching new members:', error);
-        return 0;
+        console.error('Error fetching new members from auth.users:', error);
+        
+        // Fallback to profiles table if auth.users access fails
+        console.log('Trying fallback with profiles table...');
+        const { count: profileNewMembers, error: profileError } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', thirtyDaysAgoISO);
+
+        if (profileError) {
+          console.error('Error fetching new members from profiles:', profileError);
+          return 0;
+        }
+
+        console.log('New members in last 30 days (from profiles fallback):', profileNewMembers);
+        return profileNewMembers || 0;
       }
 
+      console.log('New members in last 30 days (from auth.users):', newMembers);
       return newMembers || 0;
     } catch (error) {
       console.error('Error fetching new members info:', error);

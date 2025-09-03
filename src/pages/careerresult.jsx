@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import { Button } from "@/components/ui/button"
-import { getCareerPath } from "@/services/careerPathservice"
+import { getCareerPath, getAllCareerPaths } from "@/services/careerPathservice"
 import { useAuthCheck } from '@/context'
 
 export default function CareerResult() {
@@ -13,6 +13,9 @@ export default function CareerResult() {
   const [careerData, setCareerData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showHistory, setShowHistory] = useState(false)
+  const [careerHistory, setCareerHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   useEffect(() => {
     const fetchCareerData = async () => {
@@ -40,6 +43,20 @@ export default function CareerResult() {
       fetchCareerData()
     }
   }, [searchParams, isAuthenticated])
+
+  const loadCareerHistory = async () => {
+    try {
+      setHistoryLoading(true)
+      const history = await getAllCareerPaths(user.id)
+      setCareerHistory(history)
+      setShowHistory(true)
+    } catch (error) {
+      console.error("Failed to load career history:", error)
+      setError("Failed to load career history")
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -167,12 +184,76 @@ export default function CareerResult() {
             >
               Generate New Path
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={loadCareerHistory}
+              disabled={historyLoading}
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              {historyLoading ? "Loading..." : "View Previous Paths"}
+            </Button>
             <Button variant="outline" onClick={() => window.history.back()}>
               Go Back
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Career History Modal */}
+      {showHistory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-96 overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Previous Career Paths</h3>
+              <button 
+                onClick={() => setShowHistory(false)} 
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-3">
+              {careerHistory.length === 0 ? (
+                <p className="text-gray-600 text-center py-4">No previous career paths found.</p>
+              ) : (
+                careerHistory.map((path) => (
+                  <div 
+                    key={path.id} 
+                    className="border p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => {
+                      setShowHistory(false)
+                      navigate(`/careerresult?id=${path.id}`)
+                    }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 mb-1">{path.field}</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Desired: {path.desired_skills}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(path.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          View Details
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

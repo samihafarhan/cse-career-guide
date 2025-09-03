@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,19 +15,16 @@ const NewsPage = () => {
   const [topHeadlines, setTopHeadlines] = useState([])
   const [searchResults, setSearchResults] = useState([])
   const [categorizedNews, setCategorizedNews] = useState([])
-  const [newsSources, setNewsSources] = useState([])
 
   // Loading states
   const [headlinesLoading, setHeadlinesLoading] = useState(true)
   const [searchLoading, setSearchLoading] = useState(false)
   const [categorizedLoading, setCategorizedLoading] = useState(true)
-  const [sourcesLoading, setSourcesLoading] = useState(true)
 
   // Error states
   const [headlinesError, setHeadlinesError] = useState(null)
   const [searchError, setSearchError] = useState(null)
   const [categorizedError, setCategorizedError] = useState(null)
-  const [sourcesError, setSourcesError] = useState(null)
 
   // Search functionality
   const [searchQuery, setSearchQuery] = useState("")
@@ -191,25 +186,10 @@ const NewsPage = () => {
     }
   }
 
-  // Fetch news sources
-  const fetchNewsSources = async () => {
-    try {
-      setSourcesLoading(true)
-      setSourcesError(null)
-      const data = await newsService.getNewsSources()
-      setNewsSources(data)
-    } catch (error) {
-      setSourcesError(error)
-    } finally {
-      setSourcesLoading(false)
-    }
-  }
-
   // Initial data fetch
   useEffect(() => {
     fetchTopHeadlines()
     fetchCategorizedNews(selectedCategories)
-    fetchNewsSources()
   }, [])
 
   // Handle category change for headlines
@@ -292,11 +272,10 @@ const NewsPage = () => {
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold text-center mb-8">Latest News</h1>
       <Tabs defaultValue="headlines" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="headlines">Top Headlines</TabsTrigger>
           <TabsTrigger value="search">Search News</TabsTrigger>
           <TabsTrigger value="categories">Multi-Category</TabsTrigger>
-          <TabsTrigger value="sources">News Sources</TabsTrigger>
         </TabsList>
 
         {/* Top Headlines Tab */}
@@ -374,11 +353,6 @@ const NewsPage = () => {
                 </div>
               )}
 
-              {!searchLoading && searchResults.length === 0 && searchQuery && (
-                <div className="text-center py-8 text-gray-500">
-                  No results found for "{searchQuery}". Try a different search term.
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -431,92 +405,7 @@ const NewsPage = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        {/* News Sources Tab */}
-        <TabsContent value="sources" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Available News Sources</CardTitle>
-              <CardDescription>Browse available news sources and publications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {sourcesLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <BeatLoader size={10} color="blue" />
-                  <span className="ml-2">Loading news sources...</span>
-                </div>
-              )}
-
-              {sourcesError && <Error message={sourcesError.message} />}
-
-              {!sourcesLoading && !sourcesError && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {newsSources.length > 0 ? (
-                    newsSources.map((source, index) => (
-                      <Card key={index} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <CardTitle className="text-lg">{source.name}</CardTitle>
-                          {source.url && (
-                            <CardDescription className="text-sm">
-                              <a
-                                href={source.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                {source.url}
-                              </a>
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                        {source.description && (
-                          <CardContent>
-                            <p className="text-sm text-gray-600">{source.description}</p>
-                          </CardContent>
-                        )}
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-8 text-gray-500">No news sources available.</div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
-
-      {/* Debug Information */}
-      {process.env.NODE_ENV === "development" && (
-        <Card className="mt-8 bg-gray-50">
-          <CardHeader>
-            <CardTitle className="text-sm">API Testing Debug Information</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs space-y-2">
-            <div>
-              <strong>Headlines:</strong> {topHeadlines.length} articles loaded
-            </div>
-            <div>
-              <strong>Search Results:</strong> {searchResults.length} articles
-            </div>
-            <div>
-              <strong>Categorized News:</strong> {categorizedNews.length} articles
-            </div>
-            <div>
-              <strong>News Sources:</strong> {newsSources.length} sources
-            </div>
-            <div>
-              <strong>Selected Category:</strong> {selectedCategory}
-            </div>
-            <div>
-              <strong>Selected Categories:</strong> {selectedCategories.join(", ")}
-            </div>
-            <div>
-              <strong>Search Query:</strong> {searchQuery || "None"}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

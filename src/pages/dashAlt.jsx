@@ -691,7 +691,7 @@ const DashAlt = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/feedback')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/feedback')}>
               <CardHeader>
                 <CardTitle className="text-xl text-violet-600">User Feedback</CardTitle>
                 <CardDescription>Provide feedback for the admins</CardDescription>
@@ -703,7 +703,7 @@ const DashAlt = () => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/news')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/news')}>
               <CardHeader>
                 <CardTitle className="text-xl text-green-800">News and Updates</CardTitle>
                 <CardDescription>Stay informed about CS trends</CardDescription>
