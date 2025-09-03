@@ -233,8 +233,6 @@ We appreciate all contributors who have helped make this project better:
 - **[samihafarhan](https://github.com/samihafarhan)** - Co-Developer
 - **[Shahriar-Khan-Shirso](https://github.com/Shahriar-Khan-Shirso)** - Co-Developer
 
-*Want to see your name here? Check out our [Contributing Guidelines](#contributing) and make your first contribution!*
-
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
@@ -247,6 +245,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 Made with ❤️ for the CSE community
 
-**[Live Demo](#) | [Documentation](#) | [Report Bug](https://github.com/abrarfahim-1000/cse-career-guide/issues) | [Request Feature](https://github.com/abrarfahim-1000/cse-career-guide/issues)**
+**[Report Bug](https://github.com/abrarfahim-1000/cse-career-guide/issues) | [Request Feature](https://github.com/abrarfahim-1000/cse-career-guide/issues)**
 
 </div>
