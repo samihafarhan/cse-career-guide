@@ -155,7 +155,7 @@ const SafetyDashboard = () => {
     if (!selectedItem) return null;
 
     // Filter out unwanted fields and format properly
-    const excludeFields = ['id', 'user_id', 'table_name', 'created_at', 'updated_at', 'email', 'submitted_by'];
+    const excludeFields = ['id', 'user_id', 'table_name', 'created_at', 'updated_at'];
     const detailsData = Object.entries(selectedItem)
       .filter(([key, value]) => {
         return !excludeFields.includes(key) && 
@@ -205,7 +205,7 @@ const SafetyDashboard = () => {
             <div className="overflow-y-auto max-h-[60vh] p-6">
               <div className="space-y-6">
                 {/* Show email prominently if available */}
-                {(selectedItem.email || selectedItem.submitted_by) && (
+                {(getEmailField(selectedItem) && getEmailField(selectedItem) !== 'No email provided') && ( 
                   <div>
                     <h4 className="font-medium text-sm text-gray-600 uppercase tracking-wide mb-2">
                       Submitted By

@@ -106,7 +106,9 @@ const Dash = () => {
                 Practice with curated interview questions and solutions.
               </p>
             </CardContent>
-          </Card>
+            </Card>
+
+
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/work-opportunities')}>
             <CardHeader>
               <CardTitle className="text-xl text-teal-600">Work Opportunities</CardTitle>
@@ -118,6 +120,9 @@ const Dash = () => {
               </p>
             </CardContent>
           </Card>
+
+
+          
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/feedback')}>
             <CardHeader>
               <CardTitle className="text-xl text-red-600">User Feedback</CardTitle>
