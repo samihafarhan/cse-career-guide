@@ -80,7 +80,7 @@ const DashAlt = () => {
   const profileCompletionPercentage = useMemo(() => {
     if (!profile) return 0
     
-    const fields = ['username', 'bio', 'role', 'graduation_year', 'university', 'department', 'skills', 'github_url', 'linkedin_url']
+    const fields = ['username', 'bio', 'role', 'grad_year', 'organization', 'skills']
     
     const completedFields = fields.filter(field => 
       profile[field] && profile[field].toString().trim() !== ''
@@ -426,9 +426,9 @@ const DashAlt = () => {
                     </Button>
                   )}
                   
-                  {profile?.graduation_year && (
+                  {profile?.grad_year && (
                     <p className="text-sm text-gray-600">
-                      Graduation Year: {profile.graduation_year}
+                      Graduation Year: {profile.grad_year}
                     </p>
                   )}
                   {profile?.university && (
@@ -687,6 +687,30 @@ const DashAlt = () => {
               <CardContent>
                 <p className="text-sm text-gray-600">
                   Connect with peers and join collaborative groups.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/feedback')}>
+              <CardHeader>
+                <CardTitle className="text-xl text-violet-600">User Feedback</CardTitle>
+                <CardDescription>Provide feedback for the admins</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Admins are humans too! Let them know how they can improve the platform.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigateToPage('/news')}>
+              <CardHeader>
+                <CardTitle className="text-xl text-green-800">News and Updates</CardTitle>
+                <CardDescription>Stay informed about CS trends</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Get the latest news and updates in computer science.
                 </p>
               </CardContent>
             </Card>

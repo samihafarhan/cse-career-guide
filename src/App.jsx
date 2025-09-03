@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect } from 'react'
 import Landing from './pages/landing.jsx'
 import Auth from './pages/auth.jsx'
-import Dash from './pages/dash.jsx'
 import DashAlt from './pages/dashAlt.jsx'
 import MyProfile from './pages/myprofile.jsx'
 import ProjectIdeas from './pages/projectideas.jsx'
@@ -42,8 +41,7 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<Dash />} />
-        <Route path="/dashboard-alt" element={<DashAlt />} />
+        <Route path="/dashboard" element={<DashAlt />} />
         <Route path="/profile" element={<MyProfile />} />
         <Route path="/project-ideas" element={<ProjectIdeas />} />
         <Route path="/submit-idea" element={<SubmitIdea />} />

@@ -34,8 +34,7 @@ import {
   updateBio, 
   updateGradYear, 
   updateSkills,
-  updateRole,
-  updateAvatarUrl
+  updateRole
 } from '../services/profileService'
 import { useAuthCheck } from '@/context'
 
@@ -57,7 +56,6 @@ const MyProfile = () => {
     const gradYearUpdate = useProfileUpdate(updateGradYear, () => fetchProfile(user.id))
     const skillsUpdate = useProfileUpdate(updateSkills, () => fetchProfile(user.id))
     const roleUpdate = useProfileUpdate(updateRole, () => fetchProfile(user.id))
-    const avatarUrlUpdate = useProfileUpdate(updateAvatarUrl, () => fetchProfile(user.id))
 
     // Fetch user profile data using the user ID from context
     useEffect(() => {
@@ -453,76 +451,6 @@ const MyProfile = () => {
                                         )}
                                     </div>
 
-                                    {/* Avatar URL Section */}
-                                    <div>
-                                        <Label className="text-gray-500">Avatar URL</Label>
-                                        <p className="text-sm break-all">{userProfile?.avatar_url || 'Not available'}</p>
-                                        
-                                        <Dialog open={avatarUrlUpdate.isDialogOpen} onOpenChange={(open) => open ? avatarUrlUpdate.openDialog(userProfile?.avatar_url) : avatarUrlUpdate.closeDialog()}>
-                                            <DialogTrigger asChild>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    className="mt-2"
-                                                    onClick={() => avatarUrlUpdate.openDialog(userProfile?.avatar_url)}
-                                                >
-                                                    Edit Avatar URL
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Update Avatar URL</DialogTitle>
-                                                    <DialogDescription>
-                                                        Enter a URL to your profile picture or avatar image.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <Label htmlFor="avatarUrl">Avatar URL</Label>
-                                                        <Input
-                                                            id="avatarUrl"
-                                                            type="url"
-                                                            placeholder="https://example.com/avatar.jpg"
-                                                            value={avatarUrlUpdate.newValue}
-                                                            onChange={(e) => {
-                                                                avatarUrlUpdate.setNewValue(e.target.value)
-                                                                avatarUrlUpdate.setError(null)
-                                                            }}
-                                                            disabled={avatarUrlUpdate.isUpdating}
-                                                        />
-                                                    </div>
-                                                    {avatarUrlUpdate.error && (
-                                                        <div className="text-red-500 text-sm">
-                                                            {avatarUrlUpdate.error}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={avatarUrlUpdate.closeDialog}
-                                                        disabled={avatarUrlUpdate.isUpdating}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => avatarUrlUpdate.handleUpdate(user.id, avatarUrlUpdate.newValue, 'Avatar URL')}
-                                                        disabled={avatarUrlUpdate.isUpdating}
-                                                    >
-                                                        {avatarUrlUpdate.isUpdating ? (
-                                                            <>
-                                                                <BeatLoader size={8} color="white" />
-                                                                <span className="ml-2">Updating...</span>
-                                                            </>
-                                                        ) : (
-                                                            'Update Avatar URL'
-                                                        )}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-
                                     {/* Bio Section */}
                                     <div className="md:col-span-2">
                                         <Label className="text-gray-500">Bio</Label>
@@ -671,19 +599,6 @@ const MyProfile = () => {
                                                 src={userProfile.pfp}
                                                 alt="Profile"
                                                 className="mt-2 w-32 h-32 object-cover rounded-full"
-                                                onError={(e) => {
-                                                    e.target.style.display = 'none'
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                    {userProfile?.avatar_url && !userProfile?.pfp && (
-                                        <div className="md:col-span-2">
-                                            <Label className="text-gray-500">Profile Picture</Label>
-                                            <img
-                                                src={userProfile.avatar_url}
-                                                alt="Profile"
-                                                className="mt-2 w-32 h-32 object-cover rounded-full border-2 border-gray-200"
                                                 onError={(e) => {
                                                     e.target.style.display = 'none'
                                                 }}
