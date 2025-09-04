@@ -150,7 +150,7 @@ const InterviewQuestions = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Interview Questions</h1>
           <p className="text-gray-600">Practice with curated technical interview questions</p>
         </div>
-        
+            
         {canSubmitQuestions() && (
           <Button 
             onClick={() => navigate('/submit-interview-question')}
@@ -286,6 +286,7 @@ const InterviewQuestions = () => {
           ))}
         </div>
       )}
+      
     </div>
   )
 }

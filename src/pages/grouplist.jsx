@@ -294,7 +294,17 @@ const GroupList = () => {
                         {group.introduction || 'No introduction provided.'}
                       </p>
                     </div>
-                    
+                    <div className='flex flex-col justify-center gap-5'>
+                      <Button variant = 'outline'
+                      size ='sm'
+                      onClick={()=> navigate('/project-ideas')}>
+                        view
+                      </Button>
+                      <Button
+                      onClick = {()=> navigate('/dashboard')}>
+                        meow
+                      </Button>
+                    </div>
                     <div>
                       <h4 className="font-semibold text-gray-800 mb-1">Members:</h4>
                       <p className="text-sm text-gray-600">

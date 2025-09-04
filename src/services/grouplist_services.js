@@ -105,7 +105,7 @@ export const createGroup = async (groupData) => { //groupdata is an obj with dat
 
   if (error) throw new Error(error.message)
   
-  return data
+  return data //data gets returned to createGroup
 }
 
 /**

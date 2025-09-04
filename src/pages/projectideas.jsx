@@ -46,7 +46,7 @@ const ProjectIdeas = () => {
   // Function to handle "Look for Groups" button click
   const handleLookForGroups = (projectId, projectTitle) => {
     navigate(`/groups?projectId=${projectId}&projectTitle=${encodeURIComponent(projectTitle)}`)
-  }
+} 
 
   // Handle submit idea button click
   const handleSubmitIdea = () => {

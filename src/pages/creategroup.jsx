@@ -110,7 +110,7 @@ const CreateGroup = () => {
       setLoading(true)
 
       // Create the group
-      const newGroup = await createGroup({
+      const newGroup = await createGroup({ 
         group_name: formData.groupName,
         introduction: formData.introduction,
         project_id: formData.projectId,
