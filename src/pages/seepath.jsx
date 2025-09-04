@@ -29,7 +29,17 @@ export default function SeePath() {
       setIsLoading(true)
       setError("")
 
-      const prompt = `Give me a detailed flow chart about ${careerResult}. Please format your response using proper markdown with headers, lists, and emphasis where appropriate. Include step-by-step progression, required skills, education paths, and career milestones.`
+      const prompt = `Create a step-by-step career flowchart for: ${careerResult}
+
+Format requirements:
+- Use clear step headers (Step 1:, Step 2:, etc.)
+- Use "→ Proceed to Step X" for transitions
+- Put decision points in code blocks using backticks
+- Use bullet points with * for lists
+- Keep it beginner-friendly with clear explanations
+- Include specific skills, tools, and milestones for each step
+
+Please format using proper markdown with headers, lists, and emphasis.`
 
       const response = await GeminiService.generateResponse(prompt)
       setFlowchart(response)
@@ -82,13 +92,13 @@ export default function SeePath() {
           </CardHeader>
           <CardContent>
             <ReactMarkdown
-  components={{
-    p: ({ children }) => <p className="text-lg font-medium text-gray-800">{children}</p>,
-    strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>
-  }}
->
-  {careerResult}
-</ReactMarkdown>
+              components={{
+                p: ({ children }) => <p className="text-lg font-medium text-gray-800">{children}</p>,
+                strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>
+              }}
+            >
+              {careerResult}
+            </ReactMarkdown>
           </CardContent>
         </Card>
 
@@ -125,18 +135,73 @@ export default function SeePath() {
                       h4: ({ children }) => <h4 className="text-lg font-medium mb-2 text-gray-700">{children}</h4>,
                       h5: ({ children }) => <h5 className="text-base font-medium mb-2 text-gray-600">{children}</h5>,
                       h6: ({ children }) => <h6 className="text-sm font-medium mb-2 text-gray-600">{children}</h6>,
-                      p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed text-base">{children}</p>,
+                      
+                      // Enhanced paragraph handling for arrows and transitions
+                      p: ({ children }) => {
+                        const text = children?.toString() || '';
+                        // Handle arrow patterns and transitions
+                        if (text.includes('--->')||text.includes('→')||text.includes('Proceed to Step')) {
+                          if (text.includes('Proceed to Step')) {
+                            return <div className="my-4 p-3 bg-green-100 border-l-4 border-green-500 rounded">
+                              <p className="text-green-800 font-semibold flex items-center">
+                                <span className="mr-2">→</span>{children}
+                              </p>
+                            </div>
+                          }
+                          return <p className="mb-3 text-blue-700 font-semibold text-base flex items-center">
+                            <span className="mr-2 text-blue-500">→</span>{children}
+                          </p>
+                        }
+                        return <p className="mb-4 text-gray-700 leading-relaxed text-base">{children}</p>
+                      },
+                      
                       ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-2">{children}</ul>,
                       ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-2">{children}</ol>,
                       li: ({ children }) => <li className="text-gray-700 leading-relaxed">{children}</li>,
                       strong: ({ children }) => <strong className="font-bold text-gray-900 bg-yellow-50 px-1 rounded">{children}</strong>,
                       em: ({ children }) => <em className="italic text-gray-700 font-medium">{children}</em>,
-                      code: ({ children }) => (
-                        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 border">{children}</code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-200">{children}</pre>
-                      ),
+                      
+                      // Enhanced code handling for decision blocks
+                      code: ({ children, className }) => {
+                        // If it's a block code (has className), handle differently
+                        if (className) {
+                          return <code className={className}>{children}</code>
+                        }
+                        
+                        const text = children?.toString() || '';
+                        // Handle decision points
+                        if (text.includes('**Yes:**') || text.includes('**No:**') || text.includes('Yes:') || text.includes('No:')) {
+                          return <span className="bg-blue-100 px-2 py-1 rounded font-semibold text-blue-800">{children}</span>
+                        }
+                        
+                        return <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 border">{children}</code>
+                      },
+                      
+                      // Enhanced pre-formatted text for decision blocks
+                      pre: ({ children }) => {
+                        const content = children?.props?.children || children;
+                        // Check if it's a decision/flow block (contains * or bullets or Yes/No)
+                        if (typeof content === 'string' && (
+                          content.includes('*') || 
+                          content.includes('**Yes:**') || 
+                          content.includes('**No:**') ||
+                          content.includes('Yes:') ||
+                          content.includes('No:') ||
+                          content.includes('→')
+                        )) {
+                          return (
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
+                              <div className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">
+                                {content}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return (
+                          <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-200">{children}</pre>
+                        )
+                      },
+                      
                       blockquote: ({ children }) => (
                         <blockquote className="border-l-4 border-green-500 pl-4 py-2 mb-4 bg-green-50 italic text-gray-700">{children}</blockquote>
                       ),
